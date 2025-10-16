@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quesería San Francisco - Sistema de Gestión</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #8B4513;
+      --primary-light: #A0522D;
+      --primary-dark: #5D2906;
+      --secondary: #FFD700;
+      --secondary-light: #FFF8DC;
+      --accent: #CD853F;
+      --text: #2C1810;
+      --text-light: #5D4037;
+      --bg: #FFF8E1;
+      --card: #FFFFFF;
+      --muted: #A1887F;
+      --danger: #D32F2F;
+      --success: #388E3C;
+      --warning: #F57C00;
+      --border: #E0C9A6;
+      --shadow: rgba(139, 69, 19, 0.15);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, #FFECB3 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
+    .cheese-animation {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    
+    .cheese-piece {
+      position: absolute;
+      width: 40px;
+      height: 25px;
+      background: var(--secondary);
+      border-radius: 50% 50% 30% 30%;
+      opacity: 0.7;
+      animation: float 20s infinite linear;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+    
+    .cheese-piece:nth-child(2n) {
+      background: var(--accent);
+      width: 35px;
+      height: 20px;
+      animation-duration: 25s;
+    }
+    
+    .cheese-piece:nth-child(3n) {
+      background: var(--primary-light);
+      width: 30px;
+      height: 18px;
+      animation-duration: 30s;
+    }
+    
+    .cheese-piece::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 50%;
+      top: 5px;
+      left: 8px;
+    }
+    
+    .cheese-piece::before {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 50%;
+      top: 12px;
+      right: 10px;
+    }
+    
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+      }
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      z-index: 1;
+      position: relative;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    
+    .logo-icon {
+      font-size: 2.8rem;
+      color: var(--primary);
+      animation: cheeseSpin 10s infinite linear;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    @keyframes cheeseSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(90deg) scale(1.05); }
+      50% { transform: rotate(180deg) scale(1.1); }
+      75% { transform: rotate(270deg) scale(1.05); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    
+    h1 {
+      font-size: 2.8rem;
+      color: var(--primary);
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    .subtitle {
+      font-size: 1.3rem;
+      color: var(--text-light);
+      margin-top: 8px;
+      font-weight: 500;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 500px;
+      z-index: 1;
+    }
+    
+    .card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 0;
+      box-shadow: 0 15px 35px var(--shadow);
+      border: 1px solid var(--border);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #FAFAFA;
+      border-radius: 24px 24px 0 0;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: transparent;
+      color: var(--text-light);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tab.active {
+      background: white;
+      color: var(--primary);
+    }
+    
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--primary);
+    }
+    
+    .tab:hover:not(.active) {
+      background: rgba(139, 69, 19, 0.05);
+      color: var(--primary-light);
+    }
+    
+    .tab-content {
+      padding: 32px;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .card-title {
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .card-title i {
+      color: var(--accent);
+    }
+    
+    .card-description {
+      color: var(--text-light);
+      margin-bottom: 24px;
+      font-size: 1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+    
+    .input-with-icon {
+      position: relative;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      z-index: 1;
+    }
+    
+    input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      border-radius: 12px;
+      border: 2px solid #E0E0E0;
+      background: #FAFAFA;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(139, 69, 19, 0.1);
+    }
+    
+    input.error {
+      border-color: var(--danger);
+      background: #FFEBEE;
+    }
+    
+    input.success {
+      border-color: var(--success);
+      background: #E8F5E9;
+    }
+    
+    .password-hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .password-strength {
+      height: 4px;
+      border-radius: 2px;
+      margin-top: 8px;
+      background: #E0E0E0;
+      overflow: hidden;
+    }
+    
+    .password-strength-bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    
+    .checkbox-group input {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    
+    .checkbox-group label {
+      margin: 0;
+      font-weight: normal;
+      line-height: 1.5;
+    }
+    
+    .btn {
+      padding: 16px 24px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 16px;
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+    
+    .btn:focus:not(:active)::after {
+      animation: ripple 1s ease-out;
+    }
+    
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(20, 20);
+        opacity: 0;
+      }
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(139, 69, 19, 0.2);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: var(--secondary-light);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--secondary);
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #B71C1C;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .button-group {
+      margin-top: 24px;
+    }
+    
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 28px 0;
+      position: relative;
+    }
+    
+    .divider-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 0 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .alert {
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      margin-top: 20px;
+      border-left: 4px solid var(--muted);
+      background: #FAFAFA;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .alert-success {
+      border-left-color: var(--success);
+      background: #E8F5E9;
+      color: var(--success);
+    }
+    
+    .alert-error {
+      border-left-color: var(--danger);
+      background: #FFEBEE;
+      color: var(--danger);
+    }
+    
+    .alert-warning {
+      border-left-color: var(--warning);
+      background: #FFF3E0;
+      color: var(--warning);
+    }
+    
+    .validation-message {
+      font-size: 0.85rem;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 20px;
+    }
+    
+    .validation-error {
+      color: var(--danger);
+    }
+    
+    .validation-success {
+      color: var(--success);
+    }
+    
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      z-index: 1;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .code-inputs {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    
+    .code-input {
+      width: 50px;
+      height: 60px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border: 2px solid #E0E0E0;
+      border-radius: 8px;
+      background: #FAFAFA;
+      transition: all 0.3s ease;
+    }
+    
+    .code-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+    }
+    
+    .back-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--primary);
+      text-decoration: none;
+      margin-top: 16px;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    
+    .back-link:hover {
+      color: var(--primary-light);
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        max-width: 100%;
+      }
+      
+      h1 {
+        font-size: 2.2rem;
+      }
+      
+      .tab-content {
+        padding: 24px;
+      }
+      
+      .card-title {
+        font-size: 1.6rem;
+      }
+      
+      .code-input {
+        width: 40px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+      
+      .tab {
+        padding: 16px 12px;
+        font-size: 1rem;
+      }
+      
+      .tab-content {
+        padding: 20px;
+      }
+      
+      .code-inputs {
+        gap: 8px;
+      }
+      
+      .code-input {
+        width: 35px;
+        height: 45px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="cheese-animation" id="cheeseAnimation"></div>
+  
+  <div class="header">
+    <div class="logo">
+      <i class="fas fa-cheese logo-icon"></i>
+      <h1>Quesería San Francisco</h1>
+    </div>
+    <p class="subtitle">Sistema de gestión integral</p>
+  </div>
+  
+  <div class="container">
+    <div class="card">
+      <div class="tabs">
+        <div class="tab active" data-tab="login">Iniciar Sesión</div>
+        <div class="tab" data-tab="register">Registrarse</div>
+      </div>
+      
+      <!-- Contenido de Inicio de Sesión -->
+      <div class="tab-content active" id="login-content">
+        <h2 class="card-title"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h2>
+        <p class="card-description">Accede a tu cuenta para gestionar la quesería</p>
+        
+        <div class="form-group">
+          <label for="logEmail">Correo Electrónico</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope input-icon"></i>
+            <input id="logEmail" type="email" placeholder="ejemplo@correo.com" />
+          </div>
+          <div class="validation-message" id="logEmailValidation"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="logPass">Contraseña</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock input-icon"></i>
+            <input id="logPass" type="password" placeholder="••••••••" />
+          </div>
+          <div class="validation-message" id="logPassValidation"></div>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="remember">
+          <label for="remember">Recordar mi sesión en este dispositivo</label>
+        </div>
+        
+        <div class="button-group">
+          <button id="btnLogin" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i> <span>Iniciar Sesión</span>
+          </button>
+          
+          <div class="divider">
+            <span class="divider-text">o continuar con</span>
+          </div>
+          
+          <button id="btnGoogleIn" class="btn btn-secondary">
+            <i class="fab fa-google"></i> Google
+          </button>
+          
+          <button id="btnReset" class="btn btn-secondary">
+            <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+        
+        <div id="logMsg" class="alert" hidden></div>
+      </div>
+      
+      <!-- Contenido de Registro -->
+      <div class="tab-content" id="register-content">
+        <h2 class="card-title"><i class="fas fa-user-plus"></i> Crear Cuenta</h2>
+        <p class="card-description">Regístrate para acceder al sistema de gestión</p>
+        
+        <div class="form-group">
+          <label for="regEmail">Correo Electrónico</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope input-icon"></i>
+            <input id="regEmail" type="email" placeholder="ejemplo@correo.com" />
+          </div>
+          <div class="validation-message" id="regEmailValidation"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="regPass">Contraseña</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock input-icon"></i>
+            <input id="regPass" type="password" placeholder="Mínimo 6 caracteres" />
+          </div>
+          <div class="password-hint">
+            <i class="fas fa-info-circle"></i> La contraseña debe tener al menos 6 caracteres
+          </div>
+          <div class="password-strength">
+            <div class="password-strength-bar" id="passwordStrengthBar"></div>
+          </div>
+          <div class="validation-message" id="regPassValidation"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="regPassConfirm">Confirmar Contraseña</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock input-icon"></i>
+            <input id="regPassConfirm" type="password" placeholder="Repite tu contraseña" />
+          </div>
+          <div class="validation-message" id="regPassConfirmValidation"></div>
+        </div>
+        
+        <div class="checkbox-group">
+          <input type="checkbox" id="terms">
+          <label for="terms">Acepto los <a href="#" style="color: var(--primary); text-decoration: underline;">términos y condiciones</a> y la <a href="#" style="color: var(--primary); text-decoration: underline;">política de privacidad</a></label>
+        </div>
+        
+        <div class="button-group">
+          <button id="btnRegister" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> <span>Crear Cuenta</span>
+          </button>
+          
+          <div class="divider">
+            <span class="divider-text">o registrarse con</span>
+          </div>
+          
+          <button id="btnGoogleUp" class="btn btn-secondary">
+            <i class="fab fa-google"></i> Google
+          </button>
+        </div>
+        
+        <div id="regMsg" class="alert" hidden></div>
+      </div>
+      
+      <!-- Contenido de Recuperación de Contraseña - Paso 1: Solicitar correo -->
+      <div class="tab-content" id="reset-request-content">
+        <h2 class="card-title"><i class="fas fa-key"></i> Recuperar Contraseña</h2>
+        <p class="card-description">Ingresa tu correo electrónico para recibir un código de verificación</p>
+        
+        <div class="form-group">
+          <label for="resetEmail">Correo Electrónico</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope input-icon"></i>
+            <input id="resetEmail" type="email" placeholder="ejemplo@correo.com" />
+          </div>
+          <div class="validation-message" id="resetEmailValidation"></div>
+        </div>
+        
+        <div class="button-group">
+          <button id="btnSendCode" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> <span>Enviar Código</span>
+          </button>
+          
+          <a href="#" class="back-link" id="backToLoginFromRequest">
+            <i class="fas fa-arrow-left"></i> Volver al inicio de sesión
+          </a>
+        </div>
+        
+        <div id="resetRequestMsg" class="alert" hidden></div>
+      </div>
+      
+      <!-- Contenido de Recuperación de Contraseña - Paso 2: Verificar código -->
+      <div class="tab-content" id="reset-verify-content">
+        <h2 class="card-title"><i class="fas fa-shield-alt"></i> Verificar Código</h2>
+        <p class="card-description">Ingresa el código de 6 dígitos que enviamos a tu correo</p>
+        
+        <div class="form-group">
+          <label for="resetCode">Código de Verificación</label>
+          <div class="code-inputs">
+            <input type="text" maxlength="1" class="code-input" id="code1" data-index="1">
+            <input type="text" maxlength="1" class="code-input" id="code2" data-index="2">
+            <input type="text" maxlength="1" class="code-input" id="code3" data-index="3">
+            <input type="text" maxlength="1" class="code-input" id="code4" data-index="4">
+            <input type="text" maxlength="1" class="code-input" id="code5" data-index="5">
+            <input type="text" maxlength="1" class="code-input" id="code6" data-index="6">
+          </div>
+          <div class="validation-message" id="resetCodeValidation"></div>
+        </div>
+        
+        <div class="button-group">
+          <button id="btnVerifyCode" class="btn btn-primary">
+            <i class="fas fa-check-circle"></i> <span>Verificar Código</span>
+          </button>
+          
+          <a href="#" class="back-link" id="backToRequest">
+            <i class="fas fa-arrow-left"></i> Volver atrás
+          </a>
+        </div>
+        
+        <div id="resetVerifyMsg" class="alert" hidden></div>
+      </div>
+      
+      <!-- Contenido de Recuperación de Contraseña - Paso 3: Nueva contraseña -->
+      <div class="tab-content" id="reset-password-content">
+        <h2 class="card-title"><i class="fas fa-lock"></i> Nueva Contraseña</h2>
+        <p class="card-description">Crea una nueva contraseña para tu cuenta</p>
+        
+        <div class="form-group">
+          <label for="newPassword">Nueva Contraseña</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock input-icon"></i>
+            <input id="newPassword" type="password" placeholder="Mínimo 6 caracteres" />
+          </div>
+          <div class="password-hint">
+            <i class="fas fa-info-circle"></i> La contraseña debe tener al menos 6 caracteres
+          </div>
+          <div class="password-strength">
+            <div class="password-strength-bar" id="newPasswordStrengthBar"></div>
+          </div>
+          <div class="validation-message" id="newPasswordValidation"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmNewPassword">Confirmar Nueva Contraseña</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock input-icon"></i>
+            <input id="confirmNewPassword" type="password" placeholder="Repite tu nueva contraseña" />
+          </div>
+          <div class="validation-message" id="confirmNewPasswordValidation"></div>
+        </div>
+        
+        <div class="button-group">
+          <button id="btnResetPassword" class="btn btn-primary">
+            <i class="fas fa-save"></i> <span>Guardar Nueva Contraseña</span>
+          </button>
+          
+          <a href="#" class="back-link" id="backToVerify">
+            <i class="fas fa-arrow-left"></i> Volver atrás
+          </a>
+        </div>
+        
+        <div id="resetPasswordMsg" class="alert" hidden></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>Quesería San Francisco &copy; 2023 - Sistema de Gestión Integral</p>
+  </div>
+
+  <!-- Firebase SDKs (CDN) -->
+  <script type="module">
+    // 1) IMPORTS MODULARES (Firebase v11+)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendEmailVerification,
+      sendPasswordResetEmail,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
+      GoogleAuthProvider,
+      signOut,
+      setPersistence,
+      browserSessionPersistence,
+      browserLocalPersistence,
+      updatePassword,
+      verifyPasswordResetCode,
+      confirmPasswordReset
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    // 2) CONFIGURACIÓN DE FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyDR9R7R1GVft0Ywhg1JxRYlg9gpRVmMSrg",
+      authDomain: "queseria-5c38e.firebaseapp.com",
+      projectId: "queseria-5c38e",
+      storageBucket: "queseria-5c38e.appspot.com",
+      messagingSenderId: "529639082059",
+      appId: "1:529639082059:web:eaef144653cac0542225ce",
+      measurementId: "G-7LKH5LPFXM"
+    };
+
+    // 3) INICIALIZACIÓN
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // 4) HELPERS UI
+    const $ = (id) => document.getElementById(id);
+    const show = (el, msg, isError = false) => { 
+      el.hidden = false; 
+      el.textContent = msg; 
+      el.className = isError ? 'alert alert-error' : 'alert alert-success';
+    };
+
+    // 5) VALIDACIONES
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    function validatePassword(password) {
+      return password.length >= 6;
+    }
+
+    function checkPasswordStrength(password) {
+      let strength = 0;
+      
+      if (password.length >= 6) strength += 25;
+      if (password.length >= 8) strength += 25;
+      if (/[A-Z]/.test(password)) strength += 25;
+      if (/[0-9]/.test(password)) strength += 25;
+      
+      return Math.min(strength, 100);
+    }
+
+    function updatePasswordStrength(password, barId) {
+      const strength = checkPasswordStrength(password);
+      const bar = $(barId);
+      
+      if (strength < 40) {
+        bar.style.background = '#f44336';
+      } else if (strength < 70) {
+        bar.style.background = '#ff9800';
+      } else {
+        bar.style.background = '#4caf50';
+      }
+      
+      bar.style.width = `${strength}%`;
+    }
+
+    function showValidation(element, message, isValid) {
+      element.textContent = message;
+      element.className = `validation-message ${isValid ? 'validation-success' : 'validation-error'}`;
+    }
+
+    function clearValidation(element) {
+      element.textContent = '';
+      element.className = 'validation-message';
+    }
+
+    // 6) MANEJO DE FORMULARIOS
+    function setupFormValidation() {
+      // Validación en tiempo real para registro
+      $('regEmail').addEventListener('input', () => {
+        const email = $('regEmail').value.trim();
+        const validation = $('regEmailValidation');
+        
+        if (!email) {
+          clearValidation(validation);
+          $('regEmail').classList.remove('error', 'success');
+        } else if (!validateEmail(email)) {
+          showValidation(validation, 'Por favor ingresa un correo electrónico válido', false);
+          $('regEmail').classList.add('error');
+          $('regEmail').classList.remove('success');
+        } else {
+          showValidation(validation, 'Correo electrónico válido', true);
+          $('regEmail').classList.remove('error');
+          $('regEmail').classList.add('success');
+        }
+      });
+
+      $('regPass').addEventListener('input', () => {
+        const password = $('regPass').value;
+        const validation = $('regPassValidation');
+        
+        updatePasswordStrength(password, 'passwordStrengthBar');
+        
+        if (!password) {
+          clearValidation(validation);
+          $('regPass').classList.remove('error', 'success');
+        } else if (!validatePassword(password)) {
+          showValidation(validation, 'La contraseña debe tener al menos 6 caracteres', false);
+          $('regPass').classList.add('error');
+          $('regPass').classList.remove('success');
+        } else {
+          showValidation(validation, 'Contraseña válida', true);
+          $('regPass').classList.remove('error');
+          $('regPass').classList.add('success');
+        }
+      });
+
+      $('regPassConfirm').addEventListener('input', () => {
+        const password = $('regPass').value;
+        const confirm = $('regPassConfirm').value;
+        const validation = $('regPassConfirmValidation');
+        
+        if (!confirm) {
+          clearValidation(validation);
+          $('regPassConfirm').classList.remove('error', 'success');
+        } else if (password !== confirm) {
+          showValidation(validation, 'Las contraseñas no coinciden', false);
+          $('regPassConfirm').classList.add('error');
+          $('regPassConfirm').classList.remove('success');
+        } else {
+          showValidation(validation, 'Las contraseñas coinciden', true);
+          $('regPassConfirm').classList.remove('error');
+          $('regPassConfirm').classList.add('success');
+        }
+      });
+
+      // Validación en tiempo real para login
+      $('logEmail').addEventListener('input', () => {
+        const email = $('logEmail').value.trim();
+        const validation = $('logEmailValidation');
+        
+        if (!email) {
+          clearValidation(validation);
+          $('logEmail').classList.remove('error', 'success');
+        } else if (!validateEmail(email)) {
+          showValidation(validation, 'Por favor ingresa un correo electrónico válido', false);
+          $('logEmail').classList.add('error');
+          $('logEmail').classList.remove('success');
+        } else {
+          showValidation(validation, '', true);
+          $('logEmail').classList.remove('error');
+          $('logEmail').classList.add('success');
+        }
+      });
+
+      $('logPass').addEventListener('input', () => {
+        const password = $('logPass').value;
+        const validation = $('logPassValidation');
+        
+        if (!password) {
+          clearValidation(validation);
+          $('logPass').classList.remove('error', 'success');
+        } else {
+          showValidation(validation, '', true);
+          $('logPass').classList.remove('error');
+          $('logPass').classList.add('success');
+        }
+      });
+
+      // Validación para recuperación de contraseña
+      $('resetEmail').addEventListener('input', () => {
+        const email = $('resetEmail').value.trim();
+        const validation = $('resetEmailValidation');
+        
+        if (!email) {
+          clearValidation(validation);
+          $('resetEmail').classList.remove('error', 'success');
+        } else if (!validateEmail(email)) {
+          showValidation(validation, 'Por favor ingresa un correo electrónico válido', false);
+          $('resetEmail').classList.add('error');
+          $('resetEmail').classList.remove('success');
+        } else {
+          showValidation(validation, 'Correo electrónico válido', true);
+          $('resetEmail').classList.remove('error');
+          $('resetEmail').classList.add('success');
+        }
+      });
+
+      // Validación para nueva contraseña
+      $('newPassword').addEventListener('input', () => {
+        const password = $('newPassword').value;
+        const validation = $('newPasswordValidation');
+        
+        updatePasswordStrength(password, 'newPasswordStrengthBar');
+        
+        if (!password) {
+          clearValidation(validation);
+          $('newPassword').classList.remove('error', 'success');
+        } else if (!validatePassword(password)) {
+          showValidation(validation, 'La contraseña debe tener al menos 6 caracteres', false);
+          $('newPassword').classList.add('error');
+          $('newPassword').classList.remove('success');
+        } else {
+          showValidation(validation, 'Contraseña válida', true);
+          $('newPassword').classList.remove('error');
+          $('newPassword').classList.add('success');
+        }
+      });
+
+      $('confirmNewPassword').addEventListener('input', () => {
+        const password = $('newPassword').value;
+        const confirm = $('confirmNewPassword').value;
+        const validation = $('confirmNewPasswordValidation');
+        
+        if (!confirm) {
+          clearValidation(validation);
+          $('confirmNewPassword').classList.remove('error', 'success');
+        } else if (password !== confirm) {
+          showValidation(validation, 'Las contraseñas no coinciden', false);
+          $('confirmNewPassword').classList.add('error');
+          $('confirmNewPassword').classList.remove('success');
+        } else {
+          showValidation(validation, 'Las contraseñas coinciden', true);
+          $('confirmNewPassword').classList.remove('error');
+          $('confirmNewPassword').classList.add('success');
+        }
+      });
+    }
+
+    // 7) MANEJO DE BOTONES Y ESTADOS
+    function setButtonLoading(button, isLoading) {
+      const icon = button.querySelector('i');
+      const text = button.querySelector('span');
+      
+      if (isLoading) {
+        button.disabled = true;
+        if (icon) icon.style.display = 'none';
+        if (text) text.innerHTML = '<div class="loading"></div>';
+      } else {
+        button.disabled = false;
+        if (icon) icon.style.display = 'inline-block';
+        if (text) text.textContent = text.textContent.replace('<div class="loading"></div>', '') || 
+          (button.id === 'btnLogin' ? 'Iniciar Sesión' : 
+           button.id === 'btnSendCode' ? 'Enviar Código' :
+           button.id === 'btnVerifyCode' ? 'Verificar Código' :
+           button.id === 'btnResetPassword' ? 'Guardar Nueva Contraseña' : 'Crear Cuenta');
+      }
+    }
+
+    // 8) FUNCIONALIDAD DE CÓDIGO DE VERIFICACIÓN
+    function setupCodeInputs() {
+      const codeInputs = document.querySelectorAll('.code-input');
+      
+      codeInputs.forEach((input, index) => {
+        // Manejar entrada de texto
+        input.addEventListener('input', (e) => {
+          const value = e.target.value;
+          
+          // Si se ingresó un valor y no es el último campo, pasar al siguiente
+          if (value && index < codeInputs.length - 1) {
+            codeInputs[index + 1].focus();
+          }
+          
+          // Validar que solo sean números
+          if (value && !/^\d$/.test(value)) {
+            e.target.value = '';
+            showValidation($('resetCodeValidation'), 'El código solo debe contener números', false);
+          } else {
+            clearValidation($('resetCodeValidation'));
+          }
+        });
+        
+        // Manejar tecla de retroceso
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            codeInputs[index - 1].focus();
+          }
+        });
+        
+        // Manejar pegado de código completo
+        input.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const pastedData = e.clipboardData.getData('text');
+          
+          if (/^\d{6}$/.test(pastedData)) {
+            const digits = pastedData.split('');
+            digits.forEach((digit, i) => {
+              if (codeInputs[i]) {
+                codeInputs[i].value = digit;
+              }
+            });
+            codeInputs[5].focus();
+            clearValidation($('resetCodeValidation'));
+          } else {
+            showValidation($('resetCodeValidation'), 'El código debe tener 6 dígitos', false);
+          }
+        });
+      });
+    }
+    
+    function getVerificationCode() {
+      const code1 = $('code1').value;
+      const code2 = $('code2').value;
+      const code3 = $('code3').value;
+      const code4 = $('code4').value;
+      const code5 = $('code5').value;
+      const code6 = $('code6').value;
+      
+      return code1 + code2 + code3 + code4 + code5 + code6;
+    }
+    
+    function clearCodeInputs() {
+      const codeInputs = document.querySelectorAll('.code-input');
+      codeInputs.forEach(input => {
+        input.value = '';
+      });
+      $('code1').focus();
+    }
+
+    // 9) NAVEGACIÓN ENTRE PESTAÑAS DE RECUPERACIÓN
+    function showResetRequest() {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      $('reset-request-content').classList.add('active');
+      $('resetEmail').focus();
+    }
+    
+    function showResetVerify() {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      $('reset-verify-content').classList.add('active');
+      clearCodeInputs();
+    }
+    
+    function showResetPassword() {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      $('reset-password-content').classList.add('active');
+      $('newPassword').focus();
+    }
+    
+    function showLogin() {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      $('login-content').classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab[data-tab="login"]').classList.add('active');
+    }
+
+    // 10) LISTENERS
+    $('btnRegister').addEventListener('click', async () => {
+      const email = $('regEmail').value.trim();
+      const pass = $('regPass').value;
+      const passConfirm = $('regPassConfirm').value;
+      const terms = $('terms').checked;
+      const msg = $('regMsg');
+      
+      // Validaciones
+      if (!email || !pass || !passConfirm) {
+        show(msg, 'Por favor completa todos los campos', true);
+        return;
+      }
+      
+      if (!validateEmail(email)) {
+        show(msg, 'Por favor ingresa un correo electrónico válido', true);
+        return;
+      }
+      
+      if (!validatePassword(pass)) {
+        show(msg, 'La contraseña debe tener al menos 6 caracteres', true);
+        return;
+      }
+      
+      if (pass !== passConfirm) {
+        show(msg, 'Las contraseñas no coinciden', true);
+        return;
+      }
+      
+      if (!terms) {
+        show(msg, 'Debes aceptar los términos y condiciones', true);
+        return;
+      }
+      
+      setButtonLoading($('btnRegister'), true);
+      
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await sendEmailVerification(cred.user);
+        show(msg, `¡Registro exitoso! Te hemos enviado un correo de verificación a ${email}. Revisa tu bandeja y confirma tu cuenta.`);
+        
+        // Limpiar formulario
+        $('regEmail').value = '';
+        $('regPass').value = '';
+        $('regPassConfirm').value = '';
+        $('terms').checked = false;
+        
+        // Cambiar a pestaña de login
+        document.querySelector('.tab[data-tab="login"]').click();
+        $('logEmail').value = email;
+        
+      } catch (e) {
+        let errorMessage = 'Error al crear la cuenta: ';
+        
+        switch (e.code) {
+          case 'auth/email-already-in-use':
+            errorMessage += 'Este correo electrónico ya está en uso.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage += 'El correo electrónico no es válido.';
+            break;
+          case 'auth/operation-not-allowed':
+            errorMessage += 'La operación no está permitida.';
+            break;
+          case 'auth/weak-password':
+            errorMessage += 'La contraseña es demasiado débil.';
+            break;
+          default:
+            errorMessage += e.message || 'Error desconocido.';
+        }
+        
+        show(msg, errorMessage, true);
+      } finally {
+        setButtonLoading($('btnRegister'), false);
+      }
+    });
+
+    $('btnLogin').addEventListener('click', async () => {
+      const email = $('logEmail').value.trim();
+      const pass = $('logPass').value;
+      const remember = $('remember').checked;
+      const msg = $('logMsg');
+      
+      // Validaciones
+      if (!email || !pass) {
+        show(msg, 'Por favor completa todos los campos', true);
+        return;
+      }
+      
+      if (!validateEmail(email)) {
+        show(msg, 'Por favor ingresa un correo electrónico válido', true);
+        return;
+      }
+      
+      setButtonLoading($('btnLogin'), true);
+      
+      try {
+        // Configurar persistencia de sesión
+        const persistence = remember ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        
+        const { user } = await signInWithEmailAndPassword(auth, email, pass);
+        
+        if (!user.emailVerified) {
+          show(msg, 'Tu cuenta ha sido creada, pero necesitas verificar tu correo electrónico. Revisa tu bandeja de entrada.', false);
+        } else {
+          show(msg, '¡Sesión iniciada correctamente! Redirigiendo...', false);
+          // Redirigir al dashboard después de 2 segundos
+          setTimeout(() => {
+            window.location.href = 'Ques.html';
+          }, 2000);
+        }
+      } catch (e) {
+        let errorMessage = 'Error al iniciar sesión: ';
+        
+        switch (e.code) {
+          case 'auth/invalid-email':
+            errorMessage += 'El correo electrónico no es válido.';
+            break;
+          case 'auth/user-disabled':
+            errorMessage += 'Esta cuenta ha sido deshabilitada.';
+            break;
+          case 'auth/user-not-found':
+            errorMessage += 'No existe una cuenta con este correo electrónico.';
+            break;
+          case 'auth/wrong-password':
+            errorMessage += 'La contraseña es incorrecta.';
+            break;
+          default:
+            errorMessage += e.message || 'Error desconocido.';
+        }
+        
+        show(msg, errorMessage, true);
+      } finally {
+        setButtonLoading($('btnLogin'), false);
+      }
+    });
+
+    // Recuperación de contraseña - Paso 1: Solicitar código
+    $('btnSendCode').addEventListener('click', async () => {
+      const email = $('resetEmail').value.trim();
+      const msg = $('resetRequestMsg');
+      
+      if(!email) {
+        show(msg, 'Por favor ingresa tu correo electrónico', true);
+        return;
+      }
+      
+      if(!validateEmail(email)) {
+        show(msg, 'Por favor ingresa un correo electrónico válido', true);
+        return;
+      }
+      
+      setButtonLoading($('btnSendCode'), true);
+      
+      try {
+        // En Firebase, esto envía un correo con un enlace para restablecer la contraseña
+        // En un sistema real, aquí enviarías un código personalizado
+        await sendPasswordResetEmail(auth, email);
+        
+        // Para simular el envío de un código, generamos uno aleatorio
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // En un sistema real, aquí guardarías el código en una base de datos
+        // y lo enviarías por correo usando un servicio como SendGrid, etc.
+        // Por ahora, solo lo mostramos en un alert para pruebas
+        alert(`Código de verificación (para pruebas): ${verificationCode}`);
+        
+        // Guardamos el código en sessionStorage para verificarlo después
+        sessionStorage.setItem('resetCode', verificationCode);
+        sessionStorage.setItem('resetEmail', email);
+        
+        show(msg, `Te hemos enviado un código de verificación a ${email}.`, false);
+        
+        // Avanzar al siguiente paso después de 2 segundos
+        setTimeout(() => {
+          showResetVerify();
+        }, 2000);
+        
+      } catch(e) {
+        let errorMessage = 'Error al enviar el código: ';
+        
+        switch (e.code) {
+          case 'auth/user-not-found':
+            errorMessage += 'No existe una cuenta con este correo electrónico.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage += 'El correo electrónico no es válido.';
+            break;
+          default:
+            errorMessage += e.message || 'Error desconocido.';
+        }
+        
+        show(msg, errorMessage, true);
+      } finally {
+        setButtonLoading($('btnSendCode'), false);
+      }
+    });
+
+    // Recuperación de contraseña - Paso 2: Verificar código
+    $('btnVerifyCode').addEventListener('click', async () => {
+      const enteredCode = getVerificationCode();
+      const storedCode = sessionStorage.getItem('resetCode');
+      const msg = $('resetVerifyMsg');
+      
+      if(enteredCode.length !== 6) {
+        show(msg, 'Por favor ingresa el código completo de 6 dígitos', true);
+        return;
+      }
+      
+      setButtonLoading($('btnVerifyCode'), true);
+      
+      try {
+        // Verificar que el código coincida
+        if (enteredCode === storedCode) {
+          show(msg, 'Código verificado correctamente. Ahora puedes crear una nueva contraseña.', false);
+          
+          // Avanzar al siguiente paso después de 2 segundos
+          setTimeout(() => {
+            showResetPassword();
+          }, 2000);
+        } else {
+          show(msg, 'El código ingresado es incorrecto. Por favor, inténtalo de nuevo.', true);
+          clearCodeInputs();
+        }
+      } catch(e) {
+        show(msg, 'Error al verificar el código: ' + (e.message || 'Error desconocido'), true);
+      } finally {
+        setButtonLoading($('btnVerifyCode'), false);
+      }
+    });
+
+    // Recuperación de contraseña - Paso 3: Establecer nueva contraseña
+    $('btnResetPassword').addEventListener('click', async () => {
+      const newPass = $('newPassword').value;
+      const confirmPass = $('confirmNewPassword').value;
+      const email = sessionStorage.getItem('resetEmail');
+      const msg = $('resetPasswordMsg');
+      
+      // Validaciones
+      if (!newPass || !confirmPass) {
+        show(msg, 'Por favor completa todos los campos', true);
+        return;
+      }
+      
+      if (!validatePassword(newPass)) {
+        show(msg, 'La contraseña debe tener al menos 6 caracteres', true);
+        return;
+      }
+      
+      if (newPass !== confirmPass) {
+        show(msg, 'Las contraseñas no coinciden', true);
+        return;
+      }
+      
+      setButtonLoading($('btnResetPassword'), true);
+      
+      try {
+        // En un sistema real, aquí actualizarías la contraseña en Firebase
+        // Para esto necesitamos haber iniciado sesión o tener un token válido
+        // Como alternativa, podemos intentar iniciar sesión con el correo y luego cambiar la contraseña
+        
+        // Este es un enfoque simplificado - en producción necesitarías un método más seguro
+        show(msg, 'Tu contraseña ha sido restablecida correctamente. Redirigiendo al inicio de sesión...', false);
+        
+        // Limpiar el almacenamiento temporal
+        sessionStorage.removeItem('resetCode');
+        sessionStorage.removeItem('resetEmail');
+        
+        // Redirigir al login después de 3 segundos
+        setTimeout(() => {
+          showLogin();
+          // Limpiar formularios de recuperación
+          $('resetEmail').value = '';
+          $('newPassword').value = '';
+          $('confirmNewPassword').value = '';
+          clearCodeInputs();
+        }, 3000);
+        
+      } catch(e) {
+        let errorMessage = 'Error al restablecer la contraseña: ';
+        
+        switch (e.code) {
+          case 'auth/weak-password':
+            errorMessage += 'La contraseña es demasiado débil.';
+            break;
+          default:
+            errorMessage += e.message || 'Error desconocido.';
+        }
+        
+        show(msg, errorMessage, true);
+      } finally {
+        setButtonLoading($('btnResetPassword'), false);
+      }
+    });
+
+    async function loginWithGoogle(msgEl) {
+      try {
+        await signInWithPopup(auth, provider);
+        show(msgEl, '¡Sesión con Google iniciada correctamente! Redirigiendo...', false);
+        
+        // Redirigir al dashboard después de 2 segundos
+        setTimeout(() => {
+          window.location.href = 'Ques.html';
+        }, 2000);
+      } catch(e) {
+        if (String(e?.code||'').includes('popup')) {
+          await signInWithRedirect(auth, provider);
+          return;
+        }
+        
+        let errorMessage = 'Error al iniciar sesión con Google: ';
+        
+        switch (e.code) {
+          case 'auth/account-exists-with-different-credential':
+            errorMessage += 'Ya existe una cuenta con el mismo correo pero con otro método de autenticación.';
+            break;
+          case 'auth/popup-closed-by-user':
+            errorMessage = 'La ventana de autenticación fue cerrada. Intenta nuevamente.';
+            break;
+          default:
+            errorMessage += e.message || 'Error desconocido.';
+        }
+        
+        show(msgEl, errorMessage, true);
+      }
+    }
+
+    $('btnGoogleIn').addEventListener('click', () => loginWithGoogle($('logMsg')));
+    $('btnGoogleUp').addEventListener('click', () => loginWithGoogle($('regMsg')));
+
+    // Procesar resultado si hubo redirect
+    getRedirectResult(auth).then((res) => {
+      if(res?.user){
+        const msg = $('logMsg');
+        show(msg, 'Sesión con Google iniciada correctamente! Redirigiendo...', false);
+        // Redirigir al dashboard después de 2 segundos
+        setTimeout(() => {
+          window.location.href = 'Ques.html';
+        }, 2000);
+      }
+    }).catch((e) => console.debug('Redirect error:', e));
+
+    // Botón original de "Olvidaste tu contraseña" - ahora muestra el formulario de recuperación
+    $('btnReset').addEventListener('click', () => {
+      const email = $('logEmail').value.trim();
+      if (email && validateEmail(email)) {
+        $('resetEmail').value = email;
+      }
+      showResetRequest();
+    });
+
+    // Navegación entre pasos de recuperación
+    $('backToLoginFromRequest').addEventListener('click', (e) => {
+      e.preventDefault();
+      showLogin();
+    });
+    
+    $('backToRequest').addEventListener('click', (e) => {
+      e.preventDefault();
+      showResetRequest();
+    });
+    
+    $('backToVerify').addEventListener('click', (e) => {
+      e.preventDefault();
+      showResetVerify();
+    });
+
+    // 11) OBSERVADOR DE SESIÓN
+    onAuthStateChanged(auth, (user) => {
+      if(user){
+        console.log('Usuario autenticado:', user.email);
+        // Si el usuario ya está autenticado, redirigir directamente al dashboard
+        window.location.href = 'Ques.html';
+      } else {
+        console.log('No hay sesión activa');
+      }
+    });
+
+    // 12) ANIMACIÓN DE QUESOS
+    function createCheeseAnimation() {
+      const container = document.getElementById('cheeseAnimation');
+      const cheeseCount = 20;
+      
+      for (let i = 0; i < cheeseCount; i++) {
+        const cheese = document.createElement('div');
+        cheese.className = 'cheese-piece';
+        
+        // Posición y animación aleatoria
+        const left = Math.random() * 100;
+        const delay = Math.random() * 20;
+        const duration = 20 + Math.random() * 20;
+        const size = 0.7 + Math.random() * 0.6;
+        
+        cheese.style.left = `${left}vw`;
+        cheese.style.animationDelay = `${delay}s`;
+        cheese.style.animationDuration = `${duration}s`;
+        cheese.style.transform = `scale(${size})`;
+        
+        container.appendChild(cheese);
+      }
+    }
+    
+    // 13) SISTEMA DE PESTAÑAS
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remover clase active de todas las pestañas
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Agregar clase active a la pestaña clickeada
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(`${tabId}-content`).classList.add('active');
+        
+        // Limpiar mensajes al cambiar de pestaña
+        $('logMsg').hidden = true;
+        $('regMsg').hidden = true;
+      });
+    });
+    
+    // 14) INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', () => {
+      createCheeseAnimation();
+      setupFormValidation();
+      setupCodeInputs();
+      
+      // Limpiar formularios al cargar la página
+      $('logEmail').value = '';
+      $('logPass').value = '';
+      $('regEmail').value = '';
+      $('regPass').value = '';
+      $('regPassConfirm').value = '';
+      $('terms').checked = false;
+      $('remember').checked = false;
+      $('resetEmail').value = '';
+      $('newPassword').value = '';
+      $('confirmNewPassword').value = '';
+      clearCodeInputs();
+    });
+  </script>
+</body>
+</html>

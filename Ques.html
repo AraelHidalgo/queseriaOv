@@ -1,0 +1,3290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Quesería San Francisco</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --color-crema: #f8f4e9;
+            --color-dorado: #d4af37;
+            --color-verde: #2e7d32;
+            --color-blanco: #ffffff;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-crema);
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, var(--color-verde) 0%, #1b5e20 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item {
+            transition: all 0.2s ease;
+            border-radius: 8px;
+        }
+        
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .sidebar-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-left: 4px solid var(--color-dorado);
+        }
+        
+        .card {
+            background-color: var(--color-blanco);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .inventory-animation {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .inventory-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+        
+        .btn-primary {
+            background-color: var(--color-verde);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1b5e20;
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background-color: var(--color-dorado);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #b8941f;
+            transform: scale(1.05);
+        }
+        
+        .btn-danger {
+            background-color: #d32f2f;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: #b71c1c;
+            transform: scale(1.05);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-verde);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background-color: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f7fafc;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-inactive {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status-low {
+            background-color: #feebc8;
+            color: #744210;
+        }
+        
+        .status-critical {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .edit-btn {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        
+        .edit-btn:hover {
+            background-color: #90cdf4;
+        }
+        
+        .delete-btn {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .delete-btn:hover {
+            background-color: #feb2b2;
+        }
+        
+        .view-btn {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .view-btn:hover {
+            background-color: #9ae6b4;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            margin: 0 4px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .pagination button.active {
+            background-color: var(--color-verde);
+            color: white;
+            border-color: var(--color-verde);
+        }
+        
+        .pagination button:hover:not(.active) {
+            background-color: #f7fafc;
+        }
+        
+        .stats-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 0 0 0 100px;
+        }
+        
+        .ingredient-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .ingredient-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .ingredient-item:last-child {
+            border-bottom: none;
+        }
+        
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background-color: var(--color-verde);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 text-white flex flex-col">
+        <div class="p-6 flex items-center justify-center border-b border-green-700">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-cheese text-3xl text-yellow-300"></i>
+                <h1 class="text-xl font-bold">Quesería San Francisco</h1>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-2 px-4">
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3 active" data-tab="dashboard">
+                        <i class="fas fa-tachometer-alt w-6 mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3" data-tab="productos">
+                        <i class="fas fa-cheese w-6 mr-3"></i>
+                        <span>Productos</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3" data-tab="proveedores">
+                        <i class="fas fa-truck w-6 mr-3"></i>
+                        <span>Proveedores</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3" data-tab="materias-primas">
+                        <i class="fas fa-flask w-6 mr-3"></i>
+                        <span>Materias Primas</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3" data-tab="inventario">
+                        <i class="fas fa-boxes w-6 mr-3"></i>
+                        <span>Inventario</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3" data-tab="recetario">
+                        <i class="fas fa-book w-6 mr-3"></i>
+                        <span>Recetario</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="sidebar-item flex items-center p-3" data-tab="ventas">
+                        <i class="fas fa-chart-line w-6 mr-3"></i>
+                        <span>Ventas & Clientes</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="p-4 border-t border-green-700">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <p class="font-medium" id="user-name">Administrador</p>
+                    <p class="text-sm text-green-200" id="user-email">queseria@sanfrancisco.com</p>
+                </div>
+            </div>
+            <button id="btnLogout" class="btn-danger w-full py-2 rounded-lg flex items-center justify-center">
+                <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-4 px-6 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800" id="page-title">Dashboard</h2>
+                <p class="text-sm text-gray-500" id="page-subtitle">Resumen general del negocio</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="search-box">
+                    <input type="text" placeholder="Buscar..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+                <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-bell mr-2"></i>Alertas
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="card p-6 stats-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Stock Total</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="total-stock">1,248</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>12% desde ayer</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-boxes text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 stats-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Ventas del Mes</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="monthly-sales">$24,580</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>8% desde el mes pasado</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-chart-line text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 stats-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Productos Activos</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="active-products">42</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-plus mr-1"></i>2 nuevos este mes</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-cheese text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 stats-card" data-aos="fade-up" data-aos-delay="400">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Alertas de Inventario</p>
+                                <h3 class="text-2xl font-bold text-gray-800" id="inventory-alerts">3</h3>
+                                <p class="text-red-500 text-sm mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>Revisar urgentemente</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full">
+                                <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="card p-6" data-aos="fade-right">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ventas Mensuales</h3>
+                        <div class="h-64">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card p-6" data-aos="fade-left">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Productos Más Vendidos</h3>
+                        <div class="h-64">
+                            <canvas id="productsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="card p-6" data-aos="fade-up">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Alertas de Stock Bajo</h3>
+                        <div class="space-y-4" id="low-stock-alerts">
+                            <!-- Las alertas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <div class="card p-6" data-aos="fade-up">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
+                        <div class="space-y-4" id="recent-activity">
+                            <!-- La actividad se cargará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos Tab -->
+            <div id="productos" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestión de Productos</h2>
+                    <button id="btnAddProduct" class="btn-primary px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Nuevo Producto
+                    </button>
+                </div>
+
+                <div class="card p-6 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="search-box flex-1">
+                            <input type="text" id="searchProduct" placeholder="Buscar productos..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="filterCategory" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Todas las categorías</option>
+                                <option value="queso">Quesos</option>
+                                <option value="yogurt">Yogures</option>
+                                <option value="miel">Miel</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                            <select id="filterStatus" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Todos los estados</option>
+                                <option value="active">Activo</option>
+                                <option value="inactive">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <!-- Los productos se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination mt-4" id="productsPagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proveedores Tab -->
+            <div id="proveedores" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestión de Proveedores</h2>
+                    <button id="btnAddSupplier" class="btn-primary px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Nuevo Proveedor
+                    </button>
+                </div>
+
+                <div class="card p-6 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="search-box flex-1">
+                            <input type="text" id="searchSupplier" placeholder="Buscar proveedores..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Contacto</th>
+                                    <th>Teléfono</th>
+                                    <th>Productos</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suppliersTableBody">
+                                <!-- Los proveedores se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination mt-4" id="suppliersPagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Materias Primas Tab -->
+            <div id="materias-primas" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Materias Primas</h2>
+                    <button id="btnAddRawMaterial" class="btn-primary px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Nueva Materia Prima
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Stock por Categoría</h3>
+                        <div class="h-64">
+                            <canvas id="materialsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 lg:col-span-2">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Alertas de Materias Primas</h3>
+                        <div class="space-y-4" id="rawMaterialsAlerts">
+                            <!-- Las alertas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Stock Actual</th>
+                                    <th>Unidad</th>
+                                    <th>Stock Mínimo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rawMaterialsTableBody">
+                                <!-- Las materias primas se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination mt-4" id="rawMaterialsPagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventario Tab -->
+            <div id="inventario" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Control de Inventario</h2>
+                    <div class="flex gap-2">
+                        <button id="btnAddEntry" class="btn-primary px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Nueva Entrada
+                        </button>
+                        <button id="btnAddExit" class="btn-secondary px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-minus mr-2"></i> Nueva Salida
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Entradas del Mes</p>
+                                <h3 class="text-2xl font-bold text-gray-800">48</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>5% desde el mes pasado</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-arrow-down text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Salidas del Mes</p>
+                                <h3 class="text-2xl font-bold text-gray-800">36</h3>
+                                <p class="text-red-500 text-sm mt-1"><i class="fas fa-arrow-down mr-1"></i>3% desde el mes pasado</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full">
+                                <i class="fas fa-arrow-up text-red-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Valor Total Inventario</p>
+                                <h3 class="text-2xl font-bold text-gray-800">$18,450</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>7% desde el mes pasado</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-dollar-sign text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Productos con Stock Bajo</p>
+                                <h3 class="text-2xl font-bold text-gray-800">5</h3>
+                                <p class="text-red-500 text-sm mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>Revisar urgentemente</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-exclamation-circle text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                        <div class="search-box flex-1">
+                            <input type="text" id="searchInventory" placeholder="Buscar en inventario..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="filterInventoryType" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Todos los tipos</option>
+                                <option value="entry">Entradas</option>
+                                <option value="exit">Salidas</option>
+                            </select>
+                            <input type="date" id="filterInventoryDate" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Producto/Materia Prima</th>
+                                    <th>Cantidad</th>
+                                    <th>Motivo</th>
+                                    <th>Responsable</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Los movimientos de inventario se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination mt-4" id="inventoryPagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recetario Tab -->
+            <div id="recetario" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Recetario</h2>
+                    <button id="btnAddRecipe" class="btn-primary px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i> Nueva Receta
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recetas por Categoría</h3>
+                        <div class="h-64">
+                            <canvas id="recipesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 lg:col-span-2">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Recetas Recientes</h3>
+                        <div class="space-y-4" id="recentRecipes">
+                            <!-- Las recetas recientes se cargarán dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Tiempo Preparación</th>
+                                    <th>Rendimiento</th>
+                                    <th>Costo Aproximado</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recipesTableBody">
+                                <!-- Las recetas se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination mt-4" id="recipesPagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ventas Tab -->
+            <div id="ventas" class="tab-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Ventas y Clientes</h2>
+                    <div class="flex gap-2">
+                        <button id="btnAddSale" class="btn-primary px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Nueva Venta
+                        </button>
+                        <button id="btnAddClient" class="btn-secondary px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i> Nuevo Cliente
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Ventas del Mes</p>
+                                <h3 class="text-2xl font-bold text-gray-800">$24,580</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>8% desde el mes pasado</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Clientes Activos</p>
+                                <h3 class="text-2xl font-bold text-gray-800">128</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-plus mr-1"></i>12 nuevos este mes</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i class="fas fa-users text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Pedidos Pendientes</p>
+                                <h3 class="text-2xl font-bold text-gray-800">7</h3>
+                                <p class="text-red-500 text-sm mt-1"><i class="fas fa-clock mr-1"></i>Por atender</p>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-500 text-sm">Ticket Promedio</p>
+                                <h3 class="text-2xl font-bold text-gray-800">$192</h3>
+                                <p class="text-green-500 text-sm mt-1"><i class="fas fa-arrow-up mr-1"></i>5% desde el mes pasado</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <i class="fas fa-receipt text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Ventas por Día</h3>
+                        <div class="h-64">
+                            <canvas id="dailySalesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Clientes por Tipo</h3>
+                        <div class="h-64">
+                            <canvas id="clientsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                        <div class="search-box flex-1">
+                            <input type="text" id="searchSales" placeholder="Buscar ventas..." class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <div class="flex gap-2">
+                            <select id="filterSalesStatus" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Todos los estados</option>
+                                <option value="completed">Completada</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="cancelled">Cancelada</option>
+                            </select>
+                            <input type="date" id="filterSalesDate" class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Productos</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody">
+                                <!-- Las ventas se cargarán dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination mt-4" id="salesPagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <!-- Modal para Productos -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="productModalTitle">Nuevo Producto</h3>
+                <button id="closeProductModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="productForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="productName">Nombre del Producto</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">Categoría</label>
+                        <select id="productCategory" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="queso">Queso</option>
+                            <option value="yogurt">Yogurt</option>
+                            <option value="miel">Miel</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">Precio ($)</label>
+                        <input type="number" id="productPrice" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productStock">Stock</label>
+                        <input type="number" id="productStock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productMinStock">Stock Mínimo</label>
+                        <input type="number" id="productMinStock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productStatus">Estado</label>
+                        <select id="productStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Descripción</label>
+                    <textarea id="productDescription" rows="3"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelProduct" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Proveedores -->
+    <div id="supplierModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="supplierModalTitle">Nuevo Proveedor</h3>
+                <button id="closeSupplierModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="supplierForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="supplierName">Nombre del Proveedor</label>
+                        <input type="text" id="supplierName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierContact">Persona de Contacto</label>
+                        <input type="text" id="supplierContact" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierPhone">Teléfono</label>
+                        <input type="tel" id="supplierPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierEmail">Email</label>
+                        <input type="email" id="supplierEmail">
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="supplierAddress">Dirección</label>
+                        <input type="text" id="supplierAddress">
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="supplierProducts">Productos que Suministra</label>
+                        <textarea id="supplierProducts" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplierStatus">Estado</label>
+                        <select id="supplierStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelSupplier" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Proveedor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Materias Primas -->
+    <div id="rawMaterialModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="rawMaterialModalTitle">Nueva Materia Prima</h3>
+                <button id="closeRawMaterialModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="rawMaterialForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="materialName">Nombre</label>
+                        <input type="text" id="materialName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialCategory">Categoría</label>
+                        <select id="materialCategory" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="lacteos">Lácteos</option>
+                            <option value="cultivos">Cultivos</option>
+                            <option value="sal">Sal</option>
+                            <option value="aditivos">Aditivos</option>
+                            <option value="envases">Envases</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialStock">Stock Actual</label>
+                        <input type="number" id="materialStock" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialUnit">Unidad de Medida</label>
+                        <select id="materialUnit" required>
+                            <option value="kg">Kilogramos (kg)</option>
+                            <option value="l">Litros (l)</option>
+                            <option value="unidades">Unidades</option>
+                            <option value="paquetes">Paquetes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialMinStock">Stock Mínimo</label>
+                        <input type="number" id="materialMinStock" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialCost">Costo Unitario ($)</label>
+                        <input type="number" id="materialCost" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialSupplier">Proveedor</label>
+                        <select id="materialSupplier">
+                            <option value="">Seleccionar proveedor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialStatus">Estado</label>
+                        <select id="materialStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="materialDescription">Descripción</label>
+                    <textarea id="materialDescription" rows="2"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelRawMaterial" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Materia Prima</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Movimientos de Inventario -->
+    <div id="inventoryModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="inventoryModalTitle">Nuevo Movimiento de Inventario</h3>
+                <button id="closeInventoryModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="inventoryForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="inventoryType">Tipo de Movimiento</label>
+                        <select id="inventoryType" required>
+                            <option value="entry">Entrada</option>
+                            <option value="exit">Salida</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventoryDate">Fecha</label>
+                        <input type="date" id="inventoryDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventoryItemType">Tipo de Item</label>
+                        <select id="inventoryItemType" required>
+                            <option value="product">Producto</option>
+                            <option value="raw_material">Materia Prima</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventoryItem">Item</label>
+                        <select id="inventoryItem" required>
+                            <option value="">Seleccionar item</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventoryQuantity">Cantidad</label>
+                        <input type="number" id="inventoryQuantity" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventoryUnit">Unidad</label>
+                        <input type="text" id="inventoryUnit" readonly>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="inventoryReason">Motivo</label>
+                        <textarea id="inventoryReason" rows="2" required></textarea>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="inventoryResponsible">Responsable</label>
+                        <input type="text" id="inventoryResponsible" required>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelInventory" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Movimiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Recetas -->
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="recipeModalTitle">Nueva Receta</h3>
+                <button id="closeRecipeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="recipeForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="recipeName">Nombre de la Receta</label>
+                        <input type="text" id="recipeName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipeCategory">Categoría</label>
+                        <select id="recipeCategory" required>
+                            <option value="">Seleccionar categoría</option>
+                            <option value="quesos-blandos">Quesos Blandos</option>
+                            <option value="quesos-semiduros">Quesos Semiduros</option>
+                            <option value="quesos-duros">Quesos Duros</option>
+                            <option value="yogures">Yogures</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipeTime">Tiempo de Preparación (min)</label>
+                        <input type="number" id="recipeTime" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipeYield">Rendimiento</label>
+                        <input type="text" id="recipeYield" placeholder="Ej: 10 unidades" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipeCost">Costo Aproximado ($)</label>
+                        <input type="number" id="recipeCost" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipeStatus">Estado</label>
+                        <select id="recipeStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="recipeDescription">Descripción</label>
+                    <textarea id="recipeDescription" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Ingredientes</label>
+                    <div class="ingredient-list border rounded-lg p-4 mt-2">
+                        <div id="ingredientsContainer">
+                            <!-- Los ingredientes se añadirán dinámicamente -->
+                        </div>
+                        <button type="button" id="addIngredient" class="mt-2 text-green-600 hover:text-green-800 flex items-center">
+                            <i class="fas fa-plus mr-1"></i> Añadir Ingrediente
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Instrucciones</label>
+                    <div id="instructionsContainer">
+                        <!-- Las instrucciones se añadirán dinámicamente -->
+                    </div>
+                    <button type="button" id="addInstruction" class="mt-2 text-green-600 hover:text-green-800 flex items-center">
+                        <i class="fas fa-plus mr-1"></i> Añadir Paso
+                    </button>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelRecipe" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Receta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Ventas -->
+    <div id="saleModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="saleModalTitle">Nueva Venta</h3>
+                <button id="closeSaleModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="saleForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="saleDate">Fecha</label>
+                        <input type="date" id="saleDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleClient">Cliente</label>
+                        <select id="saleClient" required>
+                            <option value="">Seleccionar cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label>Productos</label>
+                        <div class="border rounded-lg p-4 mt-2">
+                            <div id="saleProductsContainer">
+                                <!-- Los productos de la venta se añadirán dinámicamente -->
+                            </div>
+                            <div class="flex gap-2 mt-4">
+                                <select id="saleProductSelect" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg">
+                                    <option value="">Seleccionar producto</option>
+                                </select>
+                                <input type="number" id="saleProductQuantity" min="1" value="1" class="w-20 px-3 py-2 border border-gray-300 rounded-lg">
+                                <button type="button" id="addSaleProduct" class="btn-primary px-3 py-2 rounded-lg">Añadir</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleSubtotal">Subtotal ($)</label>
+                        <input type="number" id="saleSubtotal" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleTax">Impuesto ($)</label>
+                        <input type="number" id="saleTax" min="0" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="saleDiscount">Descuento ($)</label>
+                        <input type="number" id="saleDiscount" min="0" step="0.01" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="saleTotal">Total ($)</label>
+                        <input type="number" id="saleTotal" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="saleStatus">Estado</label>
+                        <select id="saleStatus" required>
+                            <option value="completed">Completada</option>
+                            <option value="pending">Pendiente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="salePayment">Método de Pago</label>
+                        <select id="salePayment" required>
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                            <option value="transfer">Transferencia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="saleNotes">Notas</label>
+                    <textarea id="saleNotes" rows="2"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelSale" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Clientes -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800" id="clientModalTitle">Nuevo Cliente</h3>
+                <button id="closeClientModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="clientForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="clientName">Nombre</label>
+                        <input type="text" id="clientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientEmail">Email</label>
+                        <input type="email" id="clientEmail">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientPhone">Teléfono</label>
+                        <input type="tel" id="clientPhone">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientType">Tipo de Cliente</label>
+                        <select id="clientType" required>
+                            <option value="retail">Minorista</option>
+                            <option value="wholesale">Mayorista</option>
+                            <option value="restaurant">Restaurante</option>
+                        </select>
+                    </div>
+                    <div class="form-group md:col-span-2">
+                        <label for="clientAddress">Dirección</label>
+                        <input type="text" id="clientAddress">
+                    </div>
+                    <div class="form-group">
+                        <label for="clientStatus">Estado</label>
+                        <select id="clientStatus" required>
+                            <option value="active">Activo</option>
+                            <option value="inactive">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="cancelClient" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script type="module">
+        // Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+        import { 
+            getAuth, 
+            signOut, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDR9R7R1GVft0Ywhg1JxRYlg9gpRVmMSrg",
+            authDomain: "queseria-5c38e.firebaseapp.com",
+            projectId: "queseria-5c38e",
+            storageBucket: "queseria-5c38e.appspot.com",
+            messagingSenderId: "529639082059",
+            appId: "1:529639082059:web:eaef144653cac0542225ce",
+            measurementId: "G-7LKH5LPFXM"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                document.getElementById('user-name').textContent = user.displayName || 'Usuario';
+                document.getElementById('user-email').textContent = user.email;
+                // Load initial data
+                loadDashboardData();
+                loadProducts();
+                loadSuppliers();
+                loadRawMaterials();
+                loadInventory();
+                loadRecipes();
+                loadSales();
+            } else {
+                // User is signed out, redirect to login
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Logout function
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                // Sign-out successful
+                console.log('Sesión cerrada correctamente');
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                // An error happened
+                console.error('Error al cerrar sesión:', error);
+            });
+        });
+
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        // Tab navigation
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Remove active class from all items
+                document.querySelectorAll('.sidebar-item').forEach(i => {
+                    i.classList.remove('active');
+                });
+
+                // Add active class to clicked item
+                this.classList.add('active');
+
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+
+                // Show selected tab content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+
+                // Update page title and subtitle
+                updatePageTitle(tabId);
+            });
+        });
+
+        // Update page title based on active tab
+        function updatePageTitle(tabId) {
+            const titles = {
+                'dashboard': {
+                    title: 'Dashboard',
+                    subtitle: 'Resumen general del negocio'
+                },
+                'productos': {
+                    title: 'Productos',
+                    subtitle: 'Gestión de productos y catálogo'
+                },
+                'proveedores': {
+                    title: 'Proveedores',
+                    subtitle: 'Gestión de proveedores y materias primas'
+                },
+                'materias-primas': {
+                    title: 'Materias Primas',
+                    subtitle: 'Control de stock de ingredientes'
+                },
+                'inventario': {
+                    title: 'Inventario',
+                    subtitle: 'Seguimiento de entradas y salidas'
+                },
+                'recetario': {
+                    title: 'Recetario',
+                    subtitle: 'Recetas y procesos de producción'
+                },
+                'ventas': {
+                    title: 'Ventas y Clientes',
+                    subtitle: 'Historial de ventas y gestión de clientes'
+                }
+            };
+
+            document.getElementById('page-title').textContent = titles[tabId].title;
+            document.getElementById('page-subtitle').textContent = titles[tabId].subtitle;
+        }
+
+        // Data storage (simulación de base de datos)
+        let data = {
+            products: JSON.parse(localStorage.getItem('products')) || [
+                { id: 1, name: 'Queso Gouda', category: 'queso', price: 18.50, stock: 45, minStock: 10, status: 'active', description: 'Queso semiduro de leche de vaca, sabor suave y textura cremosa.' },
+                { id: 2, name: 'Queso Cheddar', category: 'queso', price: 16.75, stock: 32, minStock: 8, status: 'active', description: 'Queso de color anaranjado, sabor fuerte y textura firme.' },
+                { id: 3, name: 'Yogurt Natural', category: 'yogurt', price: 4.50, stock: 24, minStock: 15, status: 'active', description: 'Yogurt natural sin azúcar añadido, cremoso y nutritivo.' },
+                { id: 4, name: 'Miel de Abeja', category: 'miel', price: 12.00, stock: 18, minStock: 5, status: 'active', description: 'Miel pura de abeja, dulce natural con propiedades beneficiosas.' },
+                { id: 5, name: 'Queso Azul', category: 'queso', price: 22.00, stock: 12, minStock: 5, status: 'active', description: 'Queso con vetas azules, sabor intenso y aroma característico.' },
+                { id: 6, name: 'Yogurt con Frutas', category: 'yogurt', price: 5.25, stock: 36, minStock: 20, status: 'active', description: 'Yogurt cremoso con trozos de frutas naturales.' }
+            ],
+            suppliers: JSON.parse(localStorage.getItem('suppliers')) || [
+                { id: 1, name: 'Granja La Esperanza', contact: 'María González', phone: '+34 912 345 678', email: 'contacto@granjaesperanza.com', address: 'Ctra. Nacional 234, Km 12', products: 'Leche fresca, nata', status: 'active' },
+                { id: 2, name: 'Cultivos Lácteos S.L.', contact: 'Carlos Rodríguez', phone: '+34 913 456 789', email: 'ventas@cultivoslacteos.com', address: 'Polígono Industrial Norte, Nave 15', products: 'Cultivos lácteos, fermentos', status: 'active' },
+                { id: 3, name: 'Salinas del Sur', contact: 'Ana Martínez', phone: '+34 914 567 890', email: 'info@salinasdelsur.com', address: 'Carretera Costera, Km 45', products: 'Sal marina, sal de roca', status: 'active' },
+                { id: 4, name: 'Envases Plásticos S.A.', contact: 'Javier López', phone: '+34 915 678 901', email: 'compras@envasesplasticos.com', address: 'Polígono Industrial Este, Nave 8', products: 'Envases, tapas, etiquetas', status: 'active' }
+            ],
+            rawMaterials: JSON.parse(localStorage.getItem('rawMaterials')) || [
+                { id: 1, name: 'Leche Entera', category: 'lacteos', stock: 150.5, unit: 'l', minStock: 50, cost: 0.85, supplierId: 1, status: 'active', description: 'Leche de vaca entera pasteurizada' },
+                { id: 2, name: 'Cultivo Mesófilo', category: 'cultivos', stock: 2.3, unit: 'kg', minStock: 1, cost: 45.00, supplierId: 2, status: 'active', description: 'Cultivo para quesos semiduros' },
+                { id: 3, name: 'Sal Marina', category: 'sal', stock: 25.0, unit: 'kg', minStock: 10, cost: 1.20, supplierId: 3, status: 'active', description: 'Sal marina fina para salado' },
+                { id: 4, name: 'Cuajo Animal', category: 'aditivos', stock: 1.5, unit: 'l', minStock: 0.5, cost: 28.50, supplierId: 2, status: 'active', description: 'Cuajo natural para coagulación' },
+                { id: 5, name: 'Envases 250g', category: 'envases', stock: 500, unit: 'unidades', minStock: 200, cost: 0.15, supplierId: 4, status: 'active', description: 'Envases de plástico para 250g' },
+                { id: 6, name: 'Nata para Mantequilla', category: 'lacteos', stock: 30.0, unit: 'l', minStock: 15, cost: 1.80, supplierId: 1, status: 'active', description: 'Nata para elaboración de mantequilla' }
+            ],
+            inventory: JSON.parse(localStorage.getItem('inventory')) || [
+                { id: 1, date: '2023-11-15', type: 'entry', itemType: 'raw_material', itemId: 1, quantity: 50, unit: 'l', reason: 'Compra mensual', responsible: 'María González' },
+                { id: 2, date: '2023-11-16', type: 'exit', itemType: 'product', itemId: 1, quantity: 5, unit: 'unidades', reason: 'Venta a cliente', responsible: 'Carlos Ruiz' },
+                { id: 3, date: '2023-11-17', type: 'entry', itemType: 'raw_material', itemId: 3, quantity: 10, unit: 'kg', reason: 'Reposición de stock', responsible: 'Ana Martínez' },
+                { id: 4, date: '2023-11-18', type: 'exit', itemType: 'product', itemId: 3, quantity: 12, unit: 'unidades', reason: 'Venta a restaurante', responsible: 'Laura Fernández' },
+                { id: 5, date: '2023-11-19', type: 'entry', itemType: 'raw_material', itemId: 5, quantity: 200, unit: 'unidades', reason: 'Compra de envases', responsible: 'Javier López' }
+            ],
+            recipes: JSON.parse(localStorage.getItem('recipes')) || [
+                { 
+                    id: 1, 
+                    name: 'Queso Gouda Tradicional', 
+                    category: 'quesos-semiduros', 
+                    time: 180, 
+                    yield: '2 ruedas de 1kg', 
+                    cost: 28.50, 
+                    status: 'active', 
+                    description: 'Receta tradicional de queso Gouda, semiduro y de sabor suave.',
+                    ingredients: [
+                        { materialId: 1, quantity: 10, unit: 'l' },
+                        { materialId: 2, quantity: 0.05, unit: 'kg' },
+                        { materialId: 3, quantity: 0.2, unit: 'kg' },
+                        { materialId: 4, quantity: 0.01, unit: 'l' }
+                    ],
+                    instructions: [
+                        'Calentar la leche a 32°C',
+                        'Añadir el cultivo mesófilo y mezclar bien',
+                        'Agregar el cuajo y dejar reposar 45 minutos',
+                        'Cortar la cuajada y dejar reposar 10 minutos',
+                        'Calentar gradualmente a 38°C durante 30 minutos',
+                        'Moldear y prensar durante 4 horas',
+                        'Salar en salmuera durante 24 horas',
+                        'Madurar durante 4 semanas'
+                    ]
+                },
+                { 
+                    id: 2, 
+                    name: 'Yogurt Natural Cremoso', 
+                    category: 'yogures', 
+                    time: 480, 
+                    yield: '20 unidades de 200g', 
+                    cost: 12.75, 
+                    status: 'active', 
+                    description: 'Yogurt natural cremoso sin conservantes ni aditivos.',
+                    ingredients: [
+                        { materialId: 1, quantity: 5, unit: 'l' },
+                        { materialId: 6, quantity: 0.5, unit: 'l' }
+                    ],
+                    instructions: [
+                        'Pasteurizar la leche a 85°C durante 30 minutos',
+                        'Enfriar rápidamente a 43°C',
+                        'Inocular con cultivo láctico',
+                        'Mantener a 43°C durante 4-6 horas',
+                        'Enfriar y envasar',
+                        'Refrigerar durante 12 horas antes de consumir'
+                    ]
+                }
+            ],
+            sales: JSON.parse(localStorage.getItem('sales')) || [
+                { 
+                    id: 1, 
+                    date: '2023-11-15', 
+                    clientId: 1, 
+                    products: [
+                        { productId: 1, quantity: 2, price: 18.50 },
+                        { productId: 3, quantity: 4, price: 4.50 }
+                    ], 
+                    subtotal: 55.00, 
+                    tax: 4.40, 
+                    discount: 0, 
+                    total: 59.40, 
+                    status: 'completed', 
+                    payment: 'card',
+                    notes: 'Cliente habitual'
+                },
+                { 
+                    id: 2, 
+                    date: '2023-11-16', 
+                    clientId: 2, 
+                    products: [
+                        { productId: 2, quantity: 5, price: 16.75 },
+                        { productId: 5, quantity: 1, price: 22.00 }
+                    ], 
+                    subtotal: 105.75, 
+                    tax: 8.46, 
+                    discount: 5.00, 
+                    total: 109.21, 
+                    status: 'completed', 
+                    payment: 'cash',
+                    notes: 'Pedido para restaurante'
+                }
+            ],
+            clients: JSON.parse(localStorage.getItem('clients')) || [
+                { id: 1, name: 'Restaurante La Casona', email: 'pedidos@lacasona.com', phone: '+34 916 789 012', type: 'restaurant', address: 'Calle Mayor, 45', status: 'active' },
+                { id: 2, name: 'Supermercado Fresco', email: 'compras@superfresco.com', phone: '+34 917 890 123', type: 'wholesale', address: 'Avenida Central, 123', status: 'active' },
+                { id: 3, name: 'Ana Rodríguez', email: 'ana.rodriguez@email.com', phone: '+34 918 901 234', type: 'retail', address: 'Calle del Sol, 28', status: 'active' }
+            ]
+        };
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('products', JSON.stringify(data.products));
+            localStorage.setItem('suppliers', JSON.stringify(data.suppliers));
+            localStorage.setItem('rawMaterials', JSON.stringify(data.rawMaterials));
+            localStorage.setItem('inventory', JSON.stringify(data.inventory));
+            localStorage.setItem('recipes', JSON.stringify(data.recipes));
+            localStorage.setItem('sales', JSON.stringify(data.sales));
+            localStorage.setItem('clients', JSON.stringify(data.clients));
+        }
+
+        // Generate unique ID
+        function generateId(collection) {
+            return collection.length > 0 ? Math.max(...collection.map(item => item.id)) + 1 : 1;
+        }
+
+        // Dashboard functions
+        function loadDashboardData() {
+            // Update stats
+            const totalStock = data.products.reduce((sum, product) => sum + product.stock, 0);
+            document.getElementById('total-stock').textContent = totalStock.toLocaleString();
+            
+            const monthlySales = data.sales
+                .filter(sale => new Date(sale.date).getMonth() === new Date().getMonth())
+                .reduce((sum, sale) => sum + sale.total, 0);
+            document.getElementById('monthly-sales').textContent = `$${monthlySales.toLocaleString()}`;
+            
+            const activeProducts = data.products.filter(product => product.status === 'active').length;
+            document.getElementById('active-products').textContent = activeProducts;
+            
+            const inventoryAlerts = data.products.filter(product => product.stock <= product.minStock).length +
+                                  data.rawMaterials.filter(material => material.stock <= material.minStock).length;
+            document.getElementById('inventory-alerts').textContent = inventoryAlerts;
+            
+            // Load low stock alerts
+            const lowStockAlertsContainer = document.getElementById('low-stock-alerts');
+            lowStockAlertsContainer.innerHTML = '';
+            
+            const lowStockProducts = data.products.filter(product => product.stock <= product.minStock);
+            const lowStockMaterials = data.rawMaterials.filter(material => material.stock <= material.minStock);
+            
+            [...lowStockProducts, ...lowStockMaterials].forEach(item => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'flex items-center justify-between p-3 bg-red-50 rounded-lg';
+                
+                const isCritical = item.stock <= item.minStock * 0.5;
+                
+                alertDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 ${isCritical ? 'bg-red-100' : 'bg-yellow-100'} rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${isCritical ? 'fa-exclamation-triangle text-red-500' : 'fa-exclamation-circle text-yellow-500'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${item.name}</p>
+                            <p class="text-sm text-gray-500">Stock: ${item.stock} ${item.unit || 'unidades'}</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 ${isCritical ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'} rounded-full text-sm">
+                        ${isCritical ? 'Crítico' : 'Bajo'}
+                    </span>
+                `;
+                
+                lowStockAlertsContainer.appendChild(alertDiv);
+            });
+            
+            // Load recent activity
+            const recentActivityContainer = document.getElementById('recent-activity');
+            recentActivityContainer.innerHTML = '';
+            
+            const recentSales = data.sales
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 3);
+            
+            recentSales.forEach(sale => {
+                const client = data.clients.find(c => c.id === sale.clientId);
+                const activityDiv = document.createElement('div');
+                activityDiv.className = 'flex items-start';
+                
+                activityDiv.innerHTML = `
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1">
+                        <i class="fas fa-shopping-cart text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">Venta realizada</p>
+                        <p class="text-sm text-gray-500">Pedido #${sale.id} por $${sale.total} a ${client?.name || 'Cliente'}</p>
+                        <p class="text-xs text-gray-400">${formatDate(sale.date)}</p>
+                    </div>
+                `;
+                
+                recentActivityContainer.appendChild(activityDiv);
+            });
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('es-ES', options);
+        }
+
+        // Product functions
+        function loadProducts() {
+            const tableBody = document.getElementById('productsTableBody');
+            tableBody.innerHTML = '';
+            
+            data.products.forEach(product => {
+                const row = document.createElement('tr');
+                
+                const statusClass = product.status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = product.status === 'active' ? 'Activo' : 'Inactivo';
+                
+                const stockStatus = product.stock <= product.minStock ? 
+                    (product.stock <= product.minStock * 0.5 ? 'status-critical' : 'status-low') : '';
+                const stockText = product.stock <= product.minStock ? 
+                    (product.stock <= product.minStock * 0.5 ? 'Crítico' : 'Bajo') : 'Normal';
+                
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${formatCategory(product.category)}</td>
+                    <td>$${product.price.toFixed(2)}</td>
+                    <td>
+                        <span class="${stockStatus}">${product.stock} unidades</span>
+                        <span class="text-xs text-gray-500 block">${stockText}</span>
+                    </td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn edit-btn mr-2" data-id="${product.id}">
+                            <i class="fas fa-edit mr-1"></i>Editar
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${product.id}">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    editProduct(productId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteProduct(productId);
+                });
+            });
+        }
+
+        function formatCategory(category) {
+            const categories = {
+                'queso': 'Queso',
+                'yogurt': 'Yogurt',
+                'miel': 'Miel',
+                'otros': 'Otros'
+            };
+            return categories[category] || category;
+        }
+
+        function addProduct() {
+            document.getElementById('productModalTitle').textContent = 'Nuevo Producto';
+            document.getElementById('productForm').reset();
+            document.getElementById('productModal').classList.add('active');
+            
+            // Set focus on first field
+            setTimeout(() => {
+                document.getElementById('productName').focus();
+            }, 100);
+        }
+
+        function editProduct(id) {
+            const product = data.products.find(p => p.id === id);
+            if (!product) return;
+            
+            document.getElementById('productModalTitle').textContent = 'Editar Producto';
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productCategory').value = product.category;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productStock').value = product.stock;
+            document.getElementById('productMinStock').value = product.minStock;
+            document.getElementById('productStatus').value = product.status;
+            document.getElementById('productDescription').value = product.description || '';
+            
+            // Store the product ID for updating
+            document.getElementById('productForm').setAttribute('data-edit-id', id);
+            
+            document.getElementById('productModal').classList.add('active');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+                data.products = data.products.filter(p => p.id !== id);
+                saveData();
+                loadProducts();
+                loadDashboardData();
+            }
+        }
+
+        // Supplier functions
+        function loadSuppliers() {
+            const tableBody = document.getElementById('suppliersTableBody');
+            tableBody.innerHTML = '';
+            
+            data.suppliers.forEach(supplier => {
+                const row = document.createElement('tr');
+                
+                const statusClass = supplier.status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = supplier.status === 'active' ? 'Activo' : 'Inactivo';
+                
+                row.innerHTML = `
+                    <td>${supplier.name}</td>
+                    <td>${supplier.contact}</td>
+                    <td>${supplier.phone}</td>
+                    <td>${supplier.products}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn edit-btn mr-2" data-id="${supplier.id}">
+                            <i class="fas fa-edit mr-1"></i>Editar
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${supplier.id}">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const supplierId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    editSupplier(supplierId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const supplierId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteSupplier(supplierId);
+                });
+            });
+        }
+
+        function addSupplier() {
+            document.getElementById('supplierModalTitle').textContent = 'Nuevo Proveedor';
+            document.getElementById('supplierForm').reset();
+            document.getElementById('supplierModal').classList.add('active');
+        }
+
+        function editSupplier(id) {
+            const supplier = data.suppliers.find(s => s.id === id);
+            if (!supplier) return;
+            
+            document.getElementById('supplierModalTitle').textContent = 'Editar Proveedor';
+            document.getElementById('supplierName').value = supplier.name;
+            document.getElementById('supplierContact').value = supplier.contact;
+            document.getElementById('supplierPhone').value = supplier.phone;
+            document.getElementById('supplierEmail').value = supplier.email || '';
+            document.getElementById('supplierAddress').value = supplier.address || '';
+            document.getElementById('supplierProducts').value = supplier.products;
+            document.getElementById('supplierStatus').value = supplier.status;
+            
+            // Store the supplier ID for updating
+            document.getElementById('supplierForm').setAttribute('data-edit-id', id);
+            
+            document.getElementById('supplierModal').classList.add('active');
+        }
+
+        function deleteSupplier(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este proveedor?')) {
+                // Check if any raw materials are using this supplier
+                const materialsUsingSupplier = data.rawMaterials.filter(m => m.supplierId === id);
+                if (materialsUsingSupplier.length > 0) {
+                    alert('No se puede eliminar este proveedor porque está siendo utilizado por algunas materias primas.');
+                    return;
+                }
+                
+                data.suppliers = data.suppliers.filter(s => s.id !== id);
+                saveData();
+                loadSuppliers();
+            }
+        }
+
+        // Raw Materials functions
+        function loadRawMaterials() {
+            const tableBody = document.getElementById('rawMaterialsTableBody');
+            tableBody.innerHTML = '';
+            
+            data.rawMaterials.forEach(material => {
+                const row = document.createElement('tr');
+                
+                const statusClass = material.status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = material.status === 'active' ? 'Activo' : 'Inactivo';
+                
+                const stockStatus = material.stock <= material.minStock ? 
+                    (material.stock <= material.minStock * 0.5 ? 'status-critical' : 'status-low') : '';
+                const stockText = material.stock <= material.minStock ? 
+                    (material.stock <= material.minStock * 0.5 ? 'Crítico' : 'Bajo') : 'Normal';
+                
+                const supplier = data.suppliers.find(s => s.id === material.supplierId);
+                
+                row.innerHTML = `
+                    <td>${material.name}</td>
+                    <td>${formatMaterialCategory(material.category)}</td>
+                    <td>
+                        <span class="${stockStatus}">${material.stock} ${material.unit}</span>
+                        <span class="text-xs text-gray-500 block">${stockText}</span>
+                    </td>
+                    <td>${material.unit}</td>
+                    <td>${material.minStock} ${material.unit}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn edit-btn mr-2" data-id="${material.id}">
+                            <i class="fas fa-edit mr-1"></i>Editar
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${material.id}">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const materialId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    editRawMaterial(materialId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const materialId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteRawMaterial(materialId);
+                });
+            });
+            
+            // Load alerts
+            const alertsContainer = document.getElementById('rawMaterialsAlerts');
+            alertsContainer.innerHTML = '';
+            
+            const lowStockMaterials = data.rawMaterials.filter(material => material.stock <= material.minStock);
+            
+            lowStockMaterials.forEach(material => {
+                const isCritical = material.stock <= material.minStock * 0.5;
+                
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'flex items-center justify-between p-3 bg-red-50 rounded-lg';
+                
+                alertDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 ${isCritical ? 'bg-red-100' : 'bg-yellow-100'} rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${isCritical ? 'fa-exclamation-triangle text-red-500' : 'fa-exclamation-circle text-yellow-500'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${material.name}</p>
+                            <p class="text-sm text-gray-500">Stock: ${material.stock} ${material.unit}</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 ${isCritical ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'} rounded-full text-sm">
+                        ${isCritical ? 'Crítico' : 'Bajo'}
+                    </span>
+                `;
+                
+                alertsContainer.appendChild(alertDiv);
+            });
+        }
+
+        function formatMaterialCategory(category) {
+            const categories = {
+                'lacteos': 'Lácteos',
+                'cultivos': 'Cultivos',
+                'sal': 'Sal',
+                'aditivos': 'Aditivos',
+                'envases': 'Envases',
+                'otros': 'Otros'
+            };
+            return categories[category] || category;
+        }
+
+        function addRawMaterial() {
+            document.getElementById('rawMaterialModalTitle').textContent = 'Nueva Materia Prima';
+            document.getElementById('rawMaterialForm').reset();
+            
+            // Load suppliers dropdown
+            const supplierSelect = document.getElementById('materialSupplier');
+            supplierSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
+            data.suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.id;
+                option.textContent = supplier.name;
+                supplierSelect.appendChild(option);
+            });
+            
+            document.getElementById('rawMaterialModal').classList.add('active');
+        }
+
+        function editRawMaterial(id) {
+            const material = data.rawMaterials.find(m => m.id === id);
+            if (!material) return;
+            
+            document.getElementById('rawMaterialModalTitle').textContent = 'Editar Materia Prima';
+            document.getElementById('materialName').value = material.name;
+            document.getElementById('materialCategory').value = material.category;
+            document.getElementById('materialStock').value = material.stock;
+            document.getElementById('materialUnit').value = material.unit;
+            document.getElementById('materialMinStock').value = material.minStock;
+            document.getElementById('materialCost').value = material.cost;
+            document.getElementById('materialStatus').value = material.status;
+            document.getElementById('materialDescription').value = material.description || '';
+            
+            // Load suppliers dropdown
+            const supplierSelect = document.getElementById('materialSupplier');
+            supplierSelect.innerHTML = '<option value="">Seleccionar proveedor</option>';
+            data.suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.id;
+                option.textContent = supplier.name;
+                if (supplier.id === material.supplierId) {
+                    option.selected = true;
+                }
+                supplierSelect.appendChild(option);
+            });
+            
+            // Store the material ID for updating
+            document.getElementById('rawMaterialForm').setAttribute('data-edit-id', id);
+            
+            document.getElementById('rawMaterialModal').classList.add('active');
+        }
+
+        function deleteRawMaterial(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta materia prima?')) {
+                // Check if any recipes are using this material
+                const recipesUsingMaterial = data.recipes.filter(recipe => 
+                    recipe.ingredients.some(ing => ing.materialId === id)
+                );
+                if (recipesUsingMaterial.length > 0) {
+                    alert('No se puede eliminar esta materia prima porque está siendo utilizada en algunas recetas.');
+                    return;
+                }
+                
+                data.rawMaterials = data.rawMaterials.filter(m => m.id !== id);
+                saveData();
+                loadRawMaterials();
+                loadDashboardData();
+            }
+        }
+
+        // Inventory functions
+        function loadInventory() {
+            const tableBody = document.getElementById('inventoryTableBody');
+            tableBody.innerHTML = '';
+            
+            data.inventory.forEach(entry => {
+                const row = document.createElement('tr');
+                
+                let itemName = '';
+                if (entry.itemType === 'product') {
+                    const product = data.products.find(p => p.id === entry.itemId);
+                    itemName = product ? product.name : 'Producto no encontrado';
+                } else {
+                    const material = data.rawMaterials.find(m => m.id === entry.itemId);
+                    itemName = material ? material.name : 'Materia prima no encontrada';
+                }
+                
+                const typeText = entry.type === 'entry' ? 'Entrada' : 'Salida';
+                const typeClass = entry.type === 'entry' ? 'text-green-600' : 'text-red-600';
+                
+                row.innerHTML = `
+                    <td>${formatDate(entry.date)}</td>
+                    <td><span class="${typeClass} font-medium">${typeText}</span></td>
+                    <td>${itemName}</td>
+                    <td>${entry.quantity} ${entry.unit}</td>
+                    <td>${entry.reason}</td>
+                    <td>${entry.responsible}</td>
+                    <td>
+                        <button class="action-btn delete-btn" data-id="${entry.id}">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const entryId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteInventoryEntry(entryId);
+                });
+            });
+        }
+
+        function addInventoryEntry() {
+            document.getElementById('inventoryModalTitle').textContent = 'Nueva Entrada de Inventario';
+            document.getElementById('inventoryForm').reset();
+            document.getElementById('inventoryType').value = 'entry';
+            document.getElementById('inventoryDate').value = new Date().toISOString().split('T')[0];
+            
+            // Load items dropdown based on type
+            loadInventoryItems();
+            
+            document.getElementById('inventoryModal').classList.add('active');
+        }
+
+        function addInventoryExit() {
+            document.getElementById('inventoryModalTitle').textContent = 'Nueva Salida de Inventario';
+            document.getElementById('inventoryForm').reset();
+            document.getElementById('inventoryType').value = 'exit';
+            document.getElementById('inventoryDate').value = new Date().toISOString().split('T')[0];
+            
+            // Load items dropdown based on type
+            loadInventoryItems();
+            
+            document.getElementById('inventoryModal').classList.add('active');
+        }
+
+        function loadInventoryItems() {
+            const itemType = document.getElementById('inventoryItemType').value;
+            const itemSelect = document.getElementById('inventoryItem');
+            itemSelect.innerHTML = '<option value="">Seleccionar item</option>';
+            
+            if (itemType === 'product') {
+                data.products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = product.name;
+                    option.setAttribute('data-unit', 'unidades');
+                    itemSelect.appendChild(option);
+                });
+            } else {
+                data.rawMaterials.forEach(material => {
+                    const option = document.createElement('option');
+                    option.value = material.id;
+                    option.textContent = material.name;
+                    option.setAttribute('data-unit', material.unit);
+                    itemSelect.appendChild(option);
+                });
+            }
+        }
+
+        function deleteInventoryEntry(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este movimiento de inventario?')) {
+                data.inventory = data.inventory.filter(entry => entry.id !== id);
+                saveData();
+                loadInventory();
+            }
+        }
+
+        // Recipe functions
+        function loadRecipes() {
+            const tableBody = document.getElementById('recipesTableBody');
+            tableBody.innerHTML = '';
+            
+            data.recipes.forEach(recipe => {
+                const row = document.createElement('tr');
+                
+                const statusClass = recipe.status === 'active' ? 'status-active' : 'status-inactive';
+                const statusText = recipe.status === 'active' ? 'Activo' : 'Inactivo';
+                
+                row.innerHTML = `
+                    <td>${recipe.name}</td>
+                    <td>${formatRecipeCategory(recipe.category)}</td>
+                    <td>${recipe.time} min</td>
+                    <td>${recipe.yield}</td>
+                    <td>$${recipe.cost.toFixed(2)}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn view-btn mr-2" data-id="${recipe.id}">
+                            <i class="fas fa-eye mr-1"></i>Ver
+                        </button>
+                        <button class="action-btn edit-btn mr-2" data-id="${recipe.id}">
+                            <i class="fas fa-edit mr-1"></i>Editar
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${recipe.id}">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to buttons
+            document.querySelectorAll('.view-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const recipeId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    viewRecipe(recipeId);
+                });
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const recipeId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    editRecipe(recipeId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const recipeId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteRecipe(recipeId);
+                });
+            });
+            
+            // Load recent recipes
+            const recentRecipesContainer = document.getElementById('recentRecipes');
+            recentRecipesContainer.innerHTML = '';
+            
+            const recentRecipes = data.recipes.slice(0, 3);
+            
+            recentRecipes.forEach(recipe => {
+                const recipeDiv = document.createElement('div');
+                recipeDiv.className = 'flex items-start';
+                
+                recipeDiv.innerHTML = `
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-1">
+                        <i class="fas fa-book text-green-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">${recipe.name}</p>
+                        <p class="text-sm text-gray-500">${recipe.description}</p>
+                        <p class="text-xs text-gray-400">Rendimiento: ${recipe.yield}</p>
+                    </div>
+                `;
+                
+                recentRecipesContainer.appendChild(recipeDiv);
+            });
+        }
+
+        function formatRecipeCategory(category) {
+            const categories = {
+                'quesos-blandos': 'Quesos Blandos',
+                'quesos-semiduros': 'Quesos Semiduros',
+                'quesos-duros': 'Quesos Duros',
+                'yogures': 'Yogures',
+                'otros': 'Otros'
+            };
+            return categories[category] || category;
+        }
+
+        function addRecipe() {
+            document.getElementById('recipeModalTitle').textContent = 'Nueva Receta';
+            document.getElementById('recipeForm').reset();
+            
+            // Clear ingredients and instructions
+            document.getElementById('ingredientsContainer').innerHTML = '';
+            document.getElementById('instructionsContainer').innerHTML = '';
+            
+            document.getElementById('recipeModal').classList.add('active');
+        }
+
+        function viewRecipe(id) {
+            const recipe = data.recipes.find(r => r.id === id);
+            if (!recipe) return;
+            
+            // For now, we'll just show an alert with the recipe details
+            // In a real application, you might want to create a detailed view modal
+            let message = `Receta: ${recipe.name}\n\n`;
+            message += `Descripción: ${recipe.description}\n\n`;
+            message += `Ingredientes:\n`;
+            recipe.ingredients.forEach(ing => {
+                const material = data.rawMaterials.find(m => m.id === ing.materialId);
+                message += `- ${material?.name || 'Material no encontrado'}: ${ing.quantity} ${ing.unit}\n`;
+            });
+            message += `\nInstrucciones:\n`;
+            recipe.instructions.forEach((inst, index) => {
+                message += `${index + 1}. ${inst}\n`;
+            });
+            
+            alert(message);
+        }
+
+        function editRecipe(id) {
+            const recipe = data.recipes.find(r => r.id === id);
+            if (!recipe) return;
+            
+            document.getElementById('recipeModalTitle').textContent = 'Editar Receta';
+            document.getElementById('recipeName').value = recipe.name;
+            document.getElementById('recipeCategory').value = recipe.category;
+            document.getElementById('recipeTime').value = recipe.time;
+            document.getElementById('recipeYield').value = recipe.yield;
+            document.getElementById('recipeCost').value = recipe.cost;
+            document.getElementById('recipeStatus').value = recipe.status;
+            document.getElementById('recipeDescription').value = recipe.description || '';
+            
+            // Load ingredients
+            const ingredientsContainer = document.getElementById('ingredientsContainer');
+            ingredientsContainer.innerHTML = '';
+            
+            recipe.ingredients.forEach(ing => {
+                const material = data.rawMaterials.find(m => m.id === ing.materialId);
+                addIngredientField(material?.id || '', ing.quantity, ing.unit);
+            });
+            
+            // Load instructions
+            const instructionsContainer = document.getElementById('instructionsContainer');
+            instructionsContainer.innerHTML = '';
+            
+            recipe.instructions.forEach(inst => {
+                addInstructionField(inst);
+            });
+            
+            // Store the recipe ID for updating
+            document.getElementById('recipeForm').setAttribute('data-edit-id', id);
+            
+            document.getElementById('recipeModal').classList.add('active');
+        }
+
+        function deleteRecipe(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta receta?')) {
+                data.recipes = data.recipes.filter(r => r.id !== id);
+                saveData();
+                loadRecipes();
+            }
+        }
+
+        // Sales functions
+        function loadSales() {
+            const tableBody = document.getElementById('salesTableBody');
+            tableBody.innerHTML = '';
+            
+            data.sales.forEach(sale => {
+                const row = document.createElement('tr');
+                
+                const client = data.clients.find(c => c.id === sale.clientId);
+                const productNames = sale.products.map(sp => {
+                    const product = data.products.find(p => p.id === sp.productId);
+                    return product ? `${product.name} (${sp.quantity})` : 'Producto no encontrado';
+                }).join(', ');
+                
+                const statusClass = sale.status === 'completed' ? 'status-active' : 
+                                  sale.status === 'pending' ? 'status-low' : 'status-inactive';
+                const statusText = sale.status === 'completed' ? 'Completada' : 
+                                 sale.status === 'pending' ? 'Pendiente' : 'Cancelada';
+                
+                row.innerHTML = `
+                    <td>${formatDate(sale.date)}</td>
+                    <td>${client?.name || 'Cliente no encontrado'}</td>
+                    <td>${productNames}</td>
+                    <td>$${sale.total.toFixed(2)}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn view-btn mr-2" data-id="${sale.id}">
+                            <i class="fas fa-eye mr-1"></i>Ver
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${sale.id}">
+                            <i class="fas fa-trash mr-1"></i>Eliminar
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to buttons
+            document.querySelectorAll('.view-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const saleId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    viewSale(saleId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const saleId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteSale(saleId);
+                });
+            });
+        }
+
+        function addSale() {
+            document.getElementById('saleModalTitle').textContent = 'Nueva Venta';
+            document.getElementById('saleForm').reset();
+            document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+            
+            // Load clients dropdown
+            const clientSelect = document.getElementById('saleClient');
+            clientSelect.innerHTML = '<option value="">Seleccionar cliente</option>';
+            data.clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = client.name;
+                clientSelect.appendChild(option);
+            });
+            
+            // Load products dropdown
+            const productSelect = document.getElementById('saleProductSelect');
+            productSelect.innerHTML = '<option value="">Seleccionar producto</option>';
+            data.products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} - $${product.price}`;
+                option.setAttribute('data-price', product.price);
+                productSelect.appendChild(option);
+            });
+            
+            // Clear sale products
+            document.getElementById('saleProductsContainer').innerHTML = '';
+            
+            // Reset totals
+            document.getElementById('saleSubtotal').value = '0';
+            document.getElementById('saleTax').value = '0';
+            document.getElementById('saleDiscount').value = '0';
+            document.getElementById('saleTotal').value = '0';
+            
+            document.getElementById('saleModal').classList.add('active');
+        }
+
+        function addClient() {
+            document.getElementById('clientModalTitle').textContent = 'Nuevo Cliente';
+            document.getElementById('clientForm').reset();
+            document.getElementById('clientModal').classList.add('active');
+        }
+
+        function viewSale(id) {
+            const sale = data.sales.find(s => s.id === id);
+            if (!sale) return;
+            
+            const client = data.clients.find(c => c.id === sale.clientId);
+            
+            let message = `Venta #${sale.id}\n\n`;
+            message += `Fecha: ${formatDate(sale.date)}\n`;
+            message += `Cliente: ${client?.name || 'Cliente no encontrado'}\n`;
+            message += `Estado: ${sale.status === 'completed' ? 'Completada' : sale.status === 'pending' ? 'Pendiente' : 'Cancelada'}\n`;
+            message += `Método de pago: ${sale.payment === 'cash' ? 'Efectivo' : sale.payment === 'card' ? 'Tarjeta' : 'Transferencia'}\n\n`;
+            message += `Productos:\n`;
+            sale.products.forEach(sp => {
+                const product = data.products.find(p => p.id === sp.productId);
+                message += `- ${product?.name || 'Producto no encontrado'}: ${sp.quantity} x $${sp.price} = $${(sp.quantity * sp.price).toFixed(2)}\n`;
+            });
+            message += `\nSubtotal: $${sale.subtotal.toFixed(2)}\n`;
+            message += `Impuesto: $${sale.tax.toFixed(2)}\n`;
+            message += `Descuento: $${sale.discount.toFixed(2)}\n`;
+            message += `Total: $${sale.total.toFixed(2)}\n`;
+            
+            if (sale.notes) {
+                message += `\nNotas: ${sale.notes}`;
+            }
+            
+            alert(message);
+        }
+
+        function deleteSale(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta venta?')) {
+                data.sales = data.sales.filter(s => s.id !== id);
+                saveData();
+                loadSales();
+                loadDashboardData();
+            }
+        }
+
+        // Form submission handlers
+        document.getElementById('productForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const isEdit = form.hasAttribute('data-edit-id');
+            const id = isEdit ? parseInt(form.getAttribute('data-edit-id')) : generateId(data.products);
+            
+            const productData = {
+                id: id,
+                name: document.getElementById('productName').value,
+                category: document.getElementById('productCategory').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                stock: parseInt(document.getElementById('productStock').value),
+                minStock: parseInt(document.getElementById('productMinStock').value),
+                status: document.getElementById('productStatus').value,
+                description: document.getElementById('productDescription').value
+            };
+            
+            if (isEdit) {
+                // Update existing product
+                const index = data.products.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    data.products[index] = { ...data.products[index], ...productData };
+                }
+            } else {
+                // Add new product
+                data.products.push(productData);
+            }
+            
+            saveData();
+            loadProducts();
+            loadDashboardData();
+            document.getElementById('productModal').classList.remove('active');
+        });
+
+        document.getElementById('supplierForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const isEdit = form.hasAttribute('data-edit-id');
+            const id = isEdit ? parseInt(form.getAttribute('data-edit-id')) : generateId(data.suppliers);
+            
+            const supplierData = {
+                id: id,
+                name: document.getElementById('supplierName').value,
+                contact: document.getElementById('supplierContact').value,
+                phone: document.getElementById('supplierPhone').value,
+                email: document.getElementById('supplierEmail').value,
+                address: document.getElementById('supplierAddress').value,
+                products: document.getElementById('supplierProducts').value,
+                status: document.getElementById('supplierStatus').value
+            };
+            
+            if (isEdit) {
+                // Update existing supplier
+                const index = data.suppliers.findIndex(s => s.id === id);
+                if (index !== -1) {
+                    data.suppliers[index] = { ...data.suppliers[index], ...supplierData };
+                }
+            } else {
+                // Add new supplier
+                data.suppliers.push(supplierData);
+            }
+            
+            saveData();
+            loadSuppliers();
+            document.getElementById('supplierModal').classList.remove('active');
+        });
+
+        document.getElementById('rawMaterialForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const isEdit = form.hasAttribute('data-edit-id');
+            const id = isEdit ? parseInt(form.getAttribute('data-edit-id')) : generateId(data.rawMaterials);
+            
+            const materialData = {
+                id: id,
+                name: document.getElementById('materialName').value,
+                category: document.getElementById('materialCategory').value,
+                stock: parseFloat(document.getElementById('materialStock').value),
+                unit: document.getElementById('materialUnit').value,
+                minStock: parseFloat(document.getElementById('materialMinStock').value),
+                cost: parseFloat(document.getElementById('materialCost').value),
+                supplierId: document.getElementById('materialSupplier').value ? parseInt(document.getElementById('materialSupplier').value) : null,
+                status: document.getElementById('materialStatus').value,
+                description: document.getElementById('materialDescription').value
+            };
+            
+            if (isEdit) {
+                // Update existing material
+                const index = data.rawMaterials.findIndex(m => m.id === id);
+                if (index !== -1) {
+                    data.rawMaterials[index] = { ...data.rawMaterials[index], ...materialData };
+                }
+            } else {
+                // Add new material
+                data.rawMaterials.push(materialData);
+            }
+            
+            saveData();
+            loadRawMaterials();
+            loadDashboardData();
+            document.getElementById('rawMaterialModal').classList.remove('active');
+        });
+
+        document.getElementById('inventoryForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = generateId(data.inventory);
+            
+            const inventoryData = {
+                id: id,
+                date: document.getElementById('inventoryDate').value,
+                type: document.getElementById('inventoryType').value,
+                itemType: document.getElementById('inventoryItemType').value,
+                itemId: parseInt(document.getElementById('inventoryItem').value),
+                quantity: parseFloat(document.getElementById('inventoryQuantity').value),
+                unit: document.getElementById('inventoryUnit').value,
+                reason: document.getElementById('inventoryReason').value,
+                responsible: document.getElementById('inventoryResponsible').value
+            };
+            
+            // Add to inventory
+            data.inventory.push(inventoryData);
+            
+            // Update stock
+            if (inventoryData.itemType === 'product') {
+                const product = data.products.find(p => p.id === inventoryData.itemId);
+                if (product) {
+                    if (inventoryData.type === 'entry') {
+                        product.stock += inventoryData.quantity;
+                    } else {
+                        product.stock -= inventoryData.quantity;
+                    }
+                }
+            } else {
+                const material = data.rawMaterials.find(m => m.id === inventoryData.itemId);
+                if (material) {
+                    if (inventoryData.type === 'entry') {
+                        material.stock += inventoryData.quantity;
+                    } else {
+                        material.stock -= inventoryData.quantity;
+                    }
+                }
+            }
+            
+            saveData();
+            loadInventory();
+            loadProducts();
+            loadRawMaterials();
+            loadDashboardData();
+            document.getElementById('inventoryModal').classList.remove('active');
+        });
+
+        document.getElementById('recipeForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const isEdit = form.hasAttribute('data-edit-id');
+            const id = isEdit ? parseInt(form.getAttribute('data-edit-id')) : generateId(data.recipes);
+            
+            // Collect ingredients
+            const ingredients = [];
+            document.querySelectorAll('.ingredient-row').forEach(row => {
+                const materialId = row.querySelector('.ingredient-material').value;
+                const quantity = row.querySelector('.ingredient-quantity').value;
+                const unit = row.querySelector('.ingredient-unit').value;
+                
+                if (materialId && quantity) {
+                    ingredients.push({
+                        materialId: parseInt(materialId),
+                        quantity: parseFloat(quantity),
+                        unit: unit
+                    });
+                }
+            });
+            
+            // Collect instructions
+            const instructions = [];
+            document.querySelectorAll('.instruction-row').forEach(row => {
+                const instruction = row.querySelector('.instruction-text').value;
+                if (instruction) {
+                    instructions.push(instruction);
+                }
+            });
+            
+            const recipeData = {
+                id: id,
+                name: document.getElementById('recipeName').value,
+                category: document.getElementById('recipeCategory').value,
+                time: parseInt(document.getElementById('recipeTime').value),
+                yield: document.getElementById('recipeYield').value,
+                cost: parseFloat(document.getElementById('recipeCost').value),
+                status: document.getElementById('recipeStatus').value,
+                description: document.getElementById('recipeDescription').value,
+                ingredients: ingredients,
+                instructions: instructions
+            };
+            
+            if (isEdit) {
+                // Update existing recipe
+                const index = data.recipes.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    data.recipes[index] = { ...data.recipes[index], ...recipeData };
+                }
+            } else {
+                // Add new recipe
+                data.recipes.push(recipeData);
+            }
+            
+            saveData();
+            loadRecipes();
+            document.getElementById('recipeModal').classList.remove('active');
+        });
+
+        document.getElementById('saleForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = generateId(data.sales);
+            
+            // Collect sale products
+            const saleProducts = [];
+            document.querySelectorAll('.sale-product-row').forEach(row => {
+                const productId = row.getAttribute('data-product-id');
+                const quantity = parseInt(row.querySelector('.sale-product-quantity').value);
+                const price = parseFloat(row.getAttribute('data-price'));
+                
+                if (productId && quantity) {
+                    saleProducts.push({
+                        productId: parseInt(productId),
+                        quantity: quantity,
+                        price: price
+                    });
+                }
+            });
+            
+            if (saleProducts.length === 0) {
+                alert('Debe añadir al menos un producto a la venta');
+                return;
+            }
+            
+            const subtotal = saleProducts.reduce((sum, sp) => sum + (sp.quantity * sp.price), 0);
+            const tax = parseFloat(document.getElementById('saleTax').value) || 0;
+            const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
+            const total = subtotal + tax - discount;
+            
+            const saleData = {
+                id: id,
+                date: document.getElementById('saleDate').value,
+                clientId: parseInt(document.getElementById('saleClient').value),
+                products: saleProducts,
+                subtotal: subtotal,
+                tax: tax,
+                discount: discount,
+                total: total,
+                status: document.getElementById('saleStatus').value,
+                payment: document.getElementById('salePayment').value,
+                notes: document.getElementById('saleNotes').value
+            };
+            
+            // Add to sales
+            data.sales.push(saleData);
+            
+            // Update product stock
+            saleProducts.forEach(sp => {
+                const product = data.products.find(p => p.id === sp.productId);
+                if (product) {
+                    product.stock -= sp.quantity;
+                }
+            });
+            
+            saveData();
+            loadSales();
+            loadProducts();
+            loadDashboardData();
+            document.getElementById('saleModal').classList.remove('active');
+        });
+
+        document.getElementById('clientForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const id = generateId(data.clients);
+            
+            const clientData = {
+                id: id,
+                name: document.getElementById('clientName').value,
+                email: document.getElementById('clientEmail').value,
+                phone: document.getElementById('clientPhone').value,
+                type: document.getElementById('clientType').value,
+                address: document.getElementById('clientAddress').value,
+                status: document.getElementById('clientStatus').value
+            };
+            
+            // Add new client
+            data.clients.push(clientData);
+            
+            saveData();
+            document.getElementById('clientModal').classList.remove('active');
+        });
+
+        // Modal close handlers
+        document.getElementById('closeProductModal').addEventListener('click', () => {
+            document.getElementById('productModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelProduct').addEventListener('click', () => {
+            document.getElementById('productModal').classList.remove('active');
+        });
+
+        document.getElementById('closeSupplierModal').addEventListener('click', () => {
+            document.getElementById('supplierModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelSupplier').addEventListener('click', () => {
+            document.getElementById('supplierModal').classList.remove('active');
+        });
+
+        document.getElementById('closeRawMaterialModal').addEventListener('click', () => {
+            document.getElementById('rawMaterialModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelRawMaterial').addEventListener('click', () => {
+            document.getElementById('rawMaterialModal').classList.remove('active');
+        });
+
+        document.getElementById('closeInventoryModal').addEventListener('click', () => {
+            document.getElementById('inventoryModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelInventory').addEventListener('click', () => {
+            document.getElementById('inventoryModal').classList.remove('active');
+        });
+
+        document.getElementById('closeRecipeModal').addEventListener('click', () => {
+            document.getElementById('recipeModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelRecipe').addEventListener('click', () => {
+            document.getElementById('recipeModal').classList.remove('active');
+        });
+
+        document.getElementById('closeSaleModal').addEventListener('click', () => {
+            document.getElementById('saleModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelSale').addEventListener('click', () => {
+            document.getElementById('saleModal').classList.remove('active');
+        });
+
+        document.getElementById('closeClientModal').addEventListener('click', () => {
+            document.getElementById('clientModal').classList.remove('active');
+        });
+
+        document.getElementById('cancelClient').addEventListener('click', () => {
+            document.getElementById('clientModal').classList.remove('active');
+        });
+
+        // Add ingredient field
+        document.getElementById('addIngredient').addEventListener('click', () => {
+            addIngredientField();
+        });
+
+        function addIngredientField(materialId = '', quantity = '', unit = '') {
+            const container = document.getElementById('ingredientsContainer');
+            const index = container.children.length;
+            
+            const row = document.createElement('div');
+            row.className = 'ingredient-row flex gap-2 mb-2';
+            
+            row.innerHTML = `
+                <select class="ingredient-material flex-1 px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="">Seleccionar materia prima</option>
+                    ${data.rawMaterials.map(m => 
+                        `<option value="${m.id}" ${m.id == materialId ? 'selected' : ''}>${m.name} (${m.unit})</option>`
+                    ).join('')}
+                </select>
+                <input type="number" class="ingredient-quantity w-24 px-3 py-2 border border-gray-300 rounded-lg" min="0" step="0.01" value="${quantity}" placeholder="Cantidad">
+                <input type="text" class="ingredient-unit w-20 px-3 py-2 border border-gray-300 rounded-lg" value="${unit}" placeholder="Unidad" readonly>
+                <button type="button" class="remove-ingredient px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(row);
+            
+            // Add event listener to remove button
+            row.querySelector('.remove-ingredient').addEventListener('click', () => {
+                row.remove();
+            });
+            
+            // Add event listener to material select to update unit
+            row.querySelector('.ingredient-material').addEventListener('change', (e) => {
+                const selectedId = e.target.value;
+                const material = data.rawMaterials.find(m => m.id == selectedId);
+                if (material) {
+                    row.querySelector('.ingredient-unit').value = material.unit;
+                } else {
+                    row.querySelector('.ingredient-unit').value = '';
+                }
+            });
+        }
+
+        // Add instruction field
+        document.getElementById('addInstruction').addEventListener('click', () => {
+            addInstructionField();
+        });
+
+        function addInstructionField(instruction = '') {
+            const container = document.getElementById('instructionsContainer');
+            const index = container.children.length;
+            
+            const row = document.createElement('div');
+            row.className = 'instruction-row flex items-start gap-2 mb-2';
+            
+            row.innerHTML = `
+                <span class="step-number">${index + 1}</span>
+                <textarea class="instruction-text flex-1 px-3 py-2 border border-gray-300 rounded-lg" rows="2" placeholder="Describe el paso...">${instruction}</textarea>
+                <button type="button" class="remove-instruction px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 mt-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(row);
+            
+            // Add event listener to remove button
+            row.querySelector('.remove-instruction').addEventListener('click', () => {
+                row.remove();
+                // Renumber remaining steps
+                document.querySelectorAll('.instruction-row').forEach((row, idx) => {
+                    row.querySelector('.step-number').textContent = idx + 1;
+                });
+            });
+        }
+
+        // Add sale product
+        document.getElementById('addSaleProduct').addEventListener('click', () => {
+            const productSelect = document.getElementById('saleProductSelect');
+            const productId = productSelect.value;
+            const quantity = parseInt(document.getElementById('saleProductQuantity').value);
+            
+            if (!productId || !quantity) {
+                alert('Por favor selecciona un producto y especifica la cantidad');
+                return;
+            }
+            
+            const product = data.products.find(p => p.id == productId);
+            if (!product) return;
+            
+            // Check if product is already in the sale
+            const existingRow = document.querySelector(`.sale-product-row[data-product-id="${productId}"]`);
+            if (existingRow) {
+                const existingQuantity = parseInt(existingRow.querySelector('.sale-product-quantity').value);
+                existingRow.querySelector('.sale-product-quantity').value = existingQuantity + quantity;
+                updateSaleTotals();
+                return;
+            }
+            
+            const container = document.getElementById('saleProductsContainer');
+            const row = document.createElement('div');
+            row.className = 'sale-product-row flex items-center gap-2 mb-2';
+            row.setAttribute('data-product-id', productId);
+            row.setAttribute('data-price', product.price);
+            
+            row.innerHTML = `
+                <span class="flex-1">${product.name}</span>
+                <input type="number" class="sale-product-quantity w-20 px-2 py-1 border border-gray-300 rounded" min="1" value="${quantity}">
+                <span class="w-20 text-right">$${product.price.toFixed(2)}</span>
+                <span class="w-20 text-right product-total">$${(product.price * quantity).toFixed(2)}</span>
+                <button type="button" class="remove-sale-product px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(row);
+            
+            // Add event listeners
+            row.querySelector('.sale-product-quantity').addEventListener('change', updateSaleTotals);
+            row.querySelector('.remove-sale-product').addEventListener('click', () => {
+                row.remove();
+                updateSaleTotals();
+            });
+            
+            updateSaleTotals();
+        });
+
+        function updateSaleTotals() {
+            let subtotal = 0;
+            
+            document.querySelectorAll('.sale-product-row').forEach(row => {
+                const quantity = parseInt(row.querySelector('.sale-product-quantity').value);
+                const price = parseFloat(row.getAttribute('data-price'));
+                const total = quantity * price;
+                
+                row.querySelector('.product-total').textContent = `$${total.toFixed(2)}`;
+                subtotal += total;
+            });
+            
+            const tax = parseFloat(document.getElementById('saleTax').value) || 0;
+            const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
+            const total = subtotal + tax - discount;
+            
+            document.getElementById('saleSubtotal').value = subtotal.toFixed(2);
+            document.getElementById('saleTotal').value = total.toFixed(2);
+        }
+
+        // Event listeners for tax and discount changes
+        document.getElementById('saleTax').addEventListener('change', updateSaleTotals);
+        document.getElementById('saleDiscount').addEventListener('change', updateSaleTotals);
+
+        // Event listener for inventory item type change
+        document.getElementById('inventoryItemType').addEventListener('change', loadInventoryItems);
+
+        // Event listener for inventory item change
+        document.getElementById('inventoryItem').addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const unit = selectedOption.getAttribute('data-unit') || '';
+            document.getElementById('inventoryUnit').value = unit;
+        });
+
+        // Button event listeners
+        document.getElementById('btnAddProduct').addEventListener('click', addProduct);
+        document.getElementById('btnAddSupplier').addEventListener('click', addSupplier);
+        document.getElementById('btnAddRawMaterial').addEventListener('click', addRawMaterial);
+        document.getElementById('btnAddEntry').addEventListener('click', addInventoryEntry);
+        document.getElementById('btnAddExit').addEventListener('click', addInventoryExit);
+        document.getElementById('btnAddRecipe').addEventListener('click', addRecipe);
+        document.getElementById('btnAddSale').addEventListener('click', addSale);
+        document.getElementById('btnAddClient').addEventListener('click', addClient);
+
+        // Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            const salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data: [18500, 19200, 21000, 19800, 22500, 24580, 23000, 21800, 24000, 25200, 24800, 26000],
+                        borderColor: '#2e7d32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Products Chart
+            const productsCtx = document.getElementById('productsChart').getContext('2d');
+            const productsChart = new Chart(productsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Queso Gouda', 'Queso Cheddar', 'Yogurt Natural', 'Miel de Abeja', 'Queso Fresco'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            '#2e7d32',
+                            '#4caf50',
+                            '#8bc34a',
+                            '#cddc39',
+                            '#d4af37'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            // Materials Chart
+            const materialsCtx = document.getElementById('materialsChart').getContext('2d');
+            const materialsChart = new Chart(materialsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Lácteos', 'Cultivos', 'Sal', 'Aditivos', 'Envases'],
+                    datasets: [{
+                        label: 'Stock Actual',
+                        data: [180.5, 2.3, 25.0, 1.5, 500],
+                        backgroundColor: '#4caf50',
+                        borderColor: '#2e7d32',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Recipes Chart
+            const recipesCtx = document.getElementById('recipesChart').getContext('2d');
+            const recipesChart = new Chart(recipesCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Quesos Blandos', 'Quesos Semiduros', 'Quesos Duros', 'Yogures'],
+                    datasets: [{
+                        data: [15, 25, 10, 20],
+                        backgroundColor: [
+                            '#2e7d32',
+                            '#4caf50',
+                            '#8bc34a',
+                            '#cddc39'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            // Daily Sales Chart
+            const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
+            const dailySalesChart = new Chart(dailySalesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Ventas ($)',
+                        data: [1200, 1900, 1500, 2100, 2500, 1800, 2200],
+                        backgroundColor: '#4caf50',
+                        borderColor: '#2e7d32',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Clients Chart
+            const clientsCtx = document.getElementById('clientsChart').getContext('2d');
+            const clientsChart = new Chart(clientsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Minoristas', 'Mayoristas', 'Restaurantes'],
+                    datasets: [{
+                        data: [45, 35, 20],
+                        backgroundColor: [
+                            '#2e7d32',
+                            '#4caf50',
+                            '#8bc34a'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
